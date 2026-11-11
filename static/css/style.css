@@ -223,5 +223,147 @@ h1, h2, h3, p { margin-top: 0; }
   .hero-search { flex-wrap: wrap; }
   .hero-search input { flex-basis: calc(100% - 50px); }
   .hero-search button { width: 100%; }
+  /* ================= GIAO DIỆN SÁNG / TỐI & BỐ CỤC 2 PHẦN ================= */
+:root, html[data-theme="light"] {
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #e2e8f0;
+  --paper: #f8fafc;
+  --canvas: #ffffff;
+  --sidebar-bg: #f1f5f9;
+  --teal: #ea580c;
+  --teal-dark: #c2410c;
+  --teal-soft: #ffedd5;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="dark"] {
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --line: #27272a;
+  --paper: #131314;
+  --canvas: #1e1f20;
+  --sidebar-bg: #1e1f20;
+  --teal: #38bdf8;
+  --teal-dark: #0284c7;
+  --teal-soft: rgba(56, 189, 248, 0.15);
+  --shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
+}
+
+body {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--line);
+  padding: 20px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 30;
+}
+
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sidebar .main-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 16px;
+  flex: 1;
+}
+
+.nav-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 1px;
+  padding: 6px 12px;
+}
+
+.sidebar .main-nav a {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 11px 14px;
+  border-radius: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar .main-nav a:hover {
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.sidebar-bottom {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.theme-btn {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--canvas);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.main-area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--paper);
+}
+
+.content-wrap {
+  flex: 1;
+  padding: 10px 24px 40px;
+}
+
+.hero, .card, article, .stat-card, .filter-bar, input, select {
+  background: var(--canvas) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+
+@media (max-width: 860px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    height: auto;
+    position: relative;
+  }
+}
   .visual-card { width: 235px; }
 }
