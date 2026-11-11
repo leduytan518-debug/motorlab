@@ -367,3 +367,198 @@ body {
 }
   .visual-card { width: 235px; }
 }
+/* ==========================================================================
+   NÂNG CẤP BỐ CỤC 2 CỘT (SIDEBAR) & ĐỒNG BỘ CHẾ ĐỘ SÁNG / TỐI TOÀN TRANG
+   ========================================================================== */
+
+:root, html[data-theme="light"] {
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #e2e8f0;
+  --paper: #f8fafc;
+  --canvas: #ffffff;
+  --sidebar-bg: #ffffff;
+  --teal: #197c73;
+  --teal-dark: #145e58;
+  --teal-soft: #e8f4f1;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme="dark"] {
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --line: #262930;
+  --paper: #0f1115;
+  --canvas: #181b20;
+  --sidebar-bg: #14171c;
+  --teal: #2dd4bf;
+  --teal-dark: #14b8a6;
+  --teal-soft: rgba(45, 212, 191, 0.12);
+  --shadow: 0 14px 38px rgba(0, 0, 0, 0.5);
+}
+
+/* 1. Khắc phục lỗi font chữ tiếng Việt và nền trang */
+body, button, input, select, textarea {
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: var(--ink) !important;
+}
+
+body {
+  background: var(--paper) !important;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* 2. Chia khung trang web thành 2 cột chuẩn: Menu Trái (260px) - Nội dung Phải */
+.app-layout {
+  display: grid !important;
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+  min-height: 100vh !important;
+  align-items: start;
+}
+
+/* 3. Thiết kế lại Thanh Menu Trái (Sidebar) không còn bị nằm ngang */
+.sidebar {
+  background: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--line) !important;
+  padding: 24px 16px !important;
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  z-index: 50;
+}
+
+.sidebar-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 20px !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.sidebar .main-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  margin-top: 18px !important;
+  flex: 1;
+}
+
+.nav-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+  letter-spacing: 0.8px !important;
+  padding: 4px 12px 8px !important;
+  text-transform: uppercase;
+}
+
+.sidebar .main-nav a {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: var(--muted) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  padding: 11px 14px !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar .main-nav a:hover,
+.sidebar .main-nav a.nav-price {
+  background: var(--teal-soft) !important;
+  color: var(--teal) !important;
+}
+
+/* 4. Làm đẹp nút bấm Sáng / Tối ở góc dưới bên trái */
+.sidebar-bottom {
+  padding-top: 16px !important;
+  border-top: 1px solid var(--line) !important;
+}
+
+.theme-btn {
+  width: 100% !important;
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--canvas) !important;
+  color: var(--ink) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease !important;
+}
+
+.theme-btn:hover {
+  border-color: var(--teal) !important;
+  color: var(--teal) !important;
+}
+
+/* 5. Căn chỉnh khu vực nội dung bên phải */
+.main-area {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  min-height: 100vh !important;
+  background: var(--paper) !important;
+}
+
+.content-wrap {
+  flex: 1 !important;
+}
+
+/* 6. Ép toàn bộ thẻ màu trắng cứng của CSS cũ phải đổi màu theo chế độ Tối */
+html[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, #131822 0%, #0f172a 60%, #0d2524 100%) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .hero-card,
+html[data-theme="dark"] .search-box,
+html[data-theme="dark"] .filter-bar,
+html[data-theme="dark"] .table-wrap,
+html[data-theme="dark"] .site-footer,
+html[data-theme="dark"] article,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select {
+  background: var(--canvas) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme="dark"] p,
+html[data-theme="dark"] small,
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .footer-note {
+  color: var(--muted) !important;
+}
+
+html[data-theme="dark"] .chip,
+html[data-theme="dark"] .tag,
+html[data-theme="dark"] .badge {
+  background: var(--sidebar-bg) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+}
+
+/* Giao diện điện thoại */
+@media (max-width: 860px) {
+  .app-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .sidebar {
+    height: auto !important;
+    position: relative !important;
+  }
+}
