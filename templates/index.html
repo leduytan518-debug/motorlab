@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Trang chủ | MOTORLAB{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow"><span class="dot"></span> KNOWLEDGE • DIAGNOSIS • REPAIR</span>
+      <h1>Hiểu chiếc xe.<br><span>Chăm đúng cách.</span></h1>
+      <p>Tra cứu cấu tạo phương tiện, nhận biết lỗi thường gặp, tìm hiểu linh kiện và khám phá công nghệ phun xăng điện tử trên ô tô, xe máy.</p>
+      <form class="hero-search" action="{{ url_for('vehicles') }}" method="get">
+        <span class="search-icon">⌕</span>
+        <input type="search" name="q" placeholder="Tìm hãng xe, dòng xe, động cơ..." aria-label="Tìm phương tiện">
+        <button type="submit">Tìm kiếm</button>
+      </form>
+      <div class="hero-tags"><span>Ô tô</span><span>Xe máy</span><span>FI / EFI</span><span>Chẩn đoán lỗi</span></div>
+    </div>
+    <div class="hero-visual" aria-label="Minh họa ô tô và xe máy">
+      <div class="visual-glow"></div>
+      <div class="visual-card visual-car"><span>01 / AUTOMOTIVE</span><div class="vehicle-symbol">🚘</div><strong>Ô tô</strong><small>Động cơ • Hệ thống • Chẩn đoán</small></div>
+      <div class="visual-card visual-bike"><span>02 / MOTORCYCLE</span><div class="vehicle-symbol">🏍️</div><strong>Xe máy</strong><small>FI • Truyền động • Bảo dưỡng</small></div>
+      <div class="visual-stamp">TECH<br>LIBRARY</div>
+    </div>
+  </div>
+</section>
+
+<section class="container stats-grid" aria-label="Thống kê thư viện">
+  <div class="stat-card"><span>Phương tiện mẫu</span><strong>{{ counts.oto + counts.xemay }}</strong><small>Ô tô và xe máy</small></div>
+  <div class="stat-card"><span>Ô tô</span><strong>{{ counts.oto }}</strong><small>Hồ sơ minh họa</small></div>
+  <div class="stat-card"><span>Xe máy</span><strong>{{ counts.xemay }}</strong><small>Hồ sơ minh họa</small></div>
+  <div class="stat-card"><span>Kiến thức lỗi</span><strong>{{ counts.faults }}</strong><small>{{ counts.parts }} mục linh kiện</small></div>
+</section>
+
+<section class="container section-block">
+  <div class="section-heading"><div><span class="eyebrow">EXPLORE LIBRARY</span><h2>Khám phá thư viện</h2><p>Chọn chuyên mục để bắt đầu tra cứu.</p></div></div>
+  <div class="category-grid">
+    <a class="category-card" href="{{ url_for('vehicles', type='oto') }}"><span class="category-icon">🚗</span><span class="card-kicker">01 / VEHICLES</span><h3>Thư viện ô tô</h3><p>Hãng xe, dòng xe, đời xe và thông tin động cơ.</p><b>Khám phá <span>→</span></b></a>
+    <a class="category-card" href="{{ url_for('vehicles', type='xemay') }}"><span class="category-icon">🏍️</span><span class="card-kicker">02 / MOTORBIKES</span><h3>Thư viện xe máy</h3><p>Xe số, xe tay ga, xe côn tay và hệ thống vận hành.</p><b>Khám phá <span>→</span></b></a>
+    <a class="category-card" href="{{ url_for('faults') }}"><span class="category-icon">⌕</span><span class="card-kicker">03 / DIAGNOSTICS</span><h3>Tra cứu lỗi</h3><p>Triệu chứng, nguyên nhân có thể và hướng kiểm tra.</p><b>Tra cứu ngay <span>→</span></b></a>
+    <a class="category-card" href="{{ url_for('parts') }}"><span class="category-icon">⚙</span><span class="card-kicker">04 / COMPONENTS</span><h3>Kho linh kiện</h3><p>Công dụng, khả năng tương thích và thông tin giá.</p><b>Xem linh kiện <span>→</span></b></a>
+    <a class="category-card" href="{{ url_for('tools') }}"><span class="category-icon">🛠</span><span class="card-kicker">05 / WORKSHOP</span><h3>Dụng cụ sửa chữa</h3><p>Dụng cụ cơ khí, thiết bị điện và máy chẩn đoán.</p><b>Xem dụng cụ <span>→</span></b></a>
+    <a class="category-card feature-card" href="{{ url_for('efi') }}"><span class="category-icon">⌁</span><span class="card-kicker">06 / EFI TECHNOLOGY</span><h3>Thư viện FI / EFI</h3><p>ECU, cảm biến, kim phun và nguyên lý điều khiển nhiên liệu.</p><b>Học kiến thức FI <span>→</span></b></a>
+  </div>
+</section>
+
+<section class="soft-section"><div class="container section-block">
+  <div class="section-heading split-heading"><div><span class="eyebrow">VEHICLE DATABASE</span><h2>Phương tiện mới trong thư viện</h2><p>Dữ liệu ban đầu để bạn thử nghiệm chức năng website.</p></div><a class="text-link" href="{{ url_for('vehicles') }}">Xem toàn bộ →</a></div>
+  <div class="vehicle-grid">
+    {% for vehicle in vehicles %}
+    <a class="vehicle-card" href="{{ url_for('vehicle_detail', vehicle_id=vehicle.id) }}">
+      <div class="vehicle-card-top"><span class="type-pill">{{ 'Ô TÔ' if vehicle.vehicle_type == 'oto' else 'XE MÁY' }}</span><span class="mini-arrow">↗</span></div>
+      <div class="vehicle-placeholder">{{ '🚘' if vehicle.vehicle_type == 'oto' else '🏍️' }}</div>
+      <div class="vehicle-card-body"><small>{{ vehicle.brand }}</small><h3>{{ vehicle.model }}</h3><p>{{ vehicle.year or 'Chưa rõ đời' }} · {{ vehicle.engine or 'Chưa có thông số' }}</p></div>
+    </a>
+    {% else %}<p>Chưa có dữ liệu phương tiện.</p>{% endfor %}
+  </div>
+</div></section>
+
+<section class="container section-block">
+  <div class="section-heading split-heading"><div><span class="eyebrow">COMMON ISSUES</span><h2>Một số lỗi cần biết</h2><p>Triệu chứng chỉ giúp định hướng kiểm tra, không thay thế chẩn đoán trực tiếp.</p></div><a class="text-link" href="{{ url_for('faults') }}">Xem danh sách lỗi →</a></div>
+  <div class="fault-preview-grid">
+    {% for fault in faults %}<article class="fault-preview"><div class="fault-preview-meta"><span>{{ 'Ô tô' if fault.vehicle_type == 'oto' else 'Xe máy' }}</span><span class="severity severity-{{ 'high' if fault.severity == 'Cao' else 'medium' }}">{{ fault.severity }}</span></div><h3>{{ fault.symptom }}</h3><p>{{ fault.causes }}</p><small>{{ fault.code or 'Chưa có mã lỗi' }}</small></article>{% endfor %}
+  </div>
+</section>
+{% endblock %}
