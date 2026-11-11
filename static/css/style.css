@@ -608,3 +608,19 @@ html[data-theme="dark"] .search-form input {
   outline: none !important;
   }
 }
+/* Đưa ô nhập tìm kiếm về nền trắng và chữ màu tối rõ nét */
+html[data-theme="dark"] .hero input,
+html[data-theme="dark"] form input[type="text"],
+html[data-theme="dark"] form input[type="search"],
+html[data-theme="dark"] input[placeholder*="Tìm"] {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Chỉnh màu chữ gợi ý "Tìm hãng xe, dòng xe, động cơ..." dễ nhìn trên nền trắng */
+html[data-theme="dark"] input::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
