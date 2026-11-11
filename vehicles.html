@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Danh mục phương tiện | MOTORLAB{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container"><span class="eyebrow">VEHICLE DATABASE</span><h1>Danh mục phương tiện</h1><p>Tra cứu hãng xe, dòng xe, đời xe và thông tin động cơ.</p></div></section>
+<section class="container section-block content-section">
+  <form class="filter-bar" method="get" action="{{ url_for('vehicles') }}">
+    <input type="search" name="q" value="{{ q }}" placeholder="Nhập hãng xe, dòng xe, dung tích...">
+    <select name="type" aria-label="Loại phương tiện"><option value="">Tất cả phương tiện</option><option value="oto" {% if selected_type == 'oto' %}selected{% endif %}>Ô tô</option><option value="xemay" {% if selected_type == 'xemay' %}selected{% endif %}>Xe máy</option></select>
+    <button class="button-primary" type="submit">Lọc dữ liệu</button>
+  </form>
+  <div class="result-line">Tìm thấy <strong>{{ vehicles|length }}</strong> phương tiện</div>
+  <div class="vehicle-grid listing-grid">
+    {% for vehicle in vehicles %}<a class="vehicle-card" href="{{ url_for('vehicle_detail', vehicle_id=vehicle.id) }}"><div class="vehicle-card-top"><span class="type-pill">{{ 'Ô TÔ' if vehicle.vehicle_type == 'oto' else 'XE MÁY' }}</span><span class="mini-arrow">↗</span></div><div class="vehicle-placeholder">{{ '🚘' if vehicle.vehicle_type == 'oto' else '🏍️' }}</div><div class="vehicle-card-body"><small>{{ vehicle.brand }}</small><h3>{{ vehicle.model }}</h3><p>{{ vehicle.year or 'Chưa rõ đời' }} · {{ vehicle.engine or 'Chưa có thông số' }}</p></div></a>
+    {% else %}<div class="empty-state">Không tìm thấy phương tiện phù hợp. Hãy thử từ khóa khác.</div>{% endfor %}
+  </div>
+  <p class="data-note">Thông tin trong bản demo có thể chưa đầy đủ. Hãy xác minh phiên bản, đời xe và mã động cơ trước khi đặt mua phụ tùng hoặc sửa chữa.</p>
+</section>
+{% endblock %}

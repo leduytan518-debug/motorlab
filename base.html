@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Thư viện kỹ thuật tra cứu ô tô, xe máy, lỗi thường gặp, linh kiện và hệ thống phun xăng điện tử.">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">M</span><span>MOTOR<span class="brand-accent">LAB</span><small>THƯ VIỆN KỸ THUẬT PHƯƠNG TIỆN</small></span></a>
+      <button class="menu-toggle" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
+      <nav class="main-nav" aria-label="Điều hướng chính">
+        <a href="{{ url_for('index') }}">Trang chủ</a>
+        <a href="{{ url_for('vehicles') }}">Danh mục xe</a>
+        <a href="{{ url_for('faults') }}">Tra cứu lỗi</a>
+        <a href="{{ url_for('parts') }}">Linh kiện</a>
+        <a href="{{ url_for('tools') }}">Dụng cụ</a>
+        <a href="{{ url_for('efi') }}">Kiến thức FI</a>
+        <a class="nav-price" href="{{ url_for('prices') }}">Bảng giá</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>{% block content %}{% endblock %}</main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div><strong>MOTORLAB</strong><p>Thư viện tra cứu và học tập kỹ thuật ô tô – xe máy.</p></div>
+      <div class="footer-note">Dữ liệu mẫu phục vụ học tập. Luôn đối chiếu tài liệu sửa chữa của đúng hãng và đời xe.</div>
+    </div>
+  </footer>
+</body>
+</html>
