@@ -560,5 +560,51 @@ html[data-theme="dark"] .badge {
   .sidebar {
     height: auto !important;
     position: relative !important;
+    /* ================= SỬA LỖI CẤN MÀU TRẮNG Ở CHẾ ĐỘ TỐI ================= */
+
+/* 1. Đổi nền trắng của tất cả các thẻ nghiêng, thẻ thư viện và khung trắng sang nền tối */
+html[data-theme="dark"] .hero-visual > div,
+html[data-theme="dark"] .hero-cards > *,
+html[data-theme="dark"] .float-card,
+html[data-theme="dark"] .mini-card,
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .library-card,
+html[data-theme="dark"] .cat-card,
+html[data-theme="dark"] .grid > a,
+html[data-theme="dark"] .grid > div,
+html[data-theme="dark"] section .container > div > a,
+html[data-theme="dark"] section .container > div > div {
+  background: var(--canvas) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* 2. Đảm bảo toàn bộ tiêu đề bên trong thẻ hiển thị rõ nét */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] strong {
+  color: var(--ink) !important;
+}
+
+/* 3. Làm mượt lại Thanh Tìm Kiếm (hết bị vệt đen trong khung trắng) */
+html[data-theme="dark"] form,
+html[data-theme="dark"] .search-bar,
+html[data-theme="dark"] .search-form,
+html[data-theme="dark"] .hero-search {
+  background: var(--canvas) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-theme="dark"] form input,
+html[data-theme="dark"] .search-bar input,
+html[data-theme="dark"] .search-form input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--ink) !important;
+  outline: none !important;
   }
 }
