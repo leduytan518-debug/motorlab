@@ -1,14 +1,14 @@
 :root {
-  --ink: #1d2d3b;
-  --muted: #667783;
-  --line: #e2e9e9;
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #e2e8f0;
   --paper: #ffffff;
-  --canvas: #f5f8f7;
-  --teal: #197c73;
-  --teal-dark: #145e58;
-  --teal-soft: #e8f4f1;
-  --gold: #e2a64a;
-  --shadow: 0 14px 38px rgba(31, 55, 66, .07);
+  --canvas: #f8fafc;
+  --teal: #2563eb;
+  --teal-dark: #be123c;
+  --teal-soft: #ffe4e6;
+  --gold: #f59e0b;
+  --shadow: 0 16px 40px rgba(15, 23, 42, .10);
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
