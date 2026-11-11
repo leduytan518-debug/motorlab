@@ -1,9 +1,0 @@
-{% extends 'base.html' %}
-{% block title %}Dụng cụ sửa chữa | MOTORLAB{% endblock %}
-{% block content %}
-<section class="page-hero"><div class="container"><span class="eyebrow">WORKSHOP EQUIPMENT</span><h1>Dụng cụ sửa chữa</h1><p>Tìm hiểu thiết bị cơ khí, dụng cụ đo và máy chẩn đoán.</p></div></section>
-<section class="container section-block content-section">
-  <form class="filter-bar" method="get"><input type="search" name="q" value="{{ q }}" placeholder="Tìm tên dụng cụ, nhóm hoặc công dụng..."><button class="button-primary" type="submit">Tìm kiếm</button></form>
-  <div class="tools-grid">{% for tool in tools %}<article class="tool-card"><div class="tool-icon">🛠</div><span class="card-kicker">{{ tool.category }}</span><h2>{{ tool.name }}</h2><p>{{ tool.usage }}</p><div class="tool-caution"><strong>Chú ý:</strong> {{ tool.caution }}</div></article>{% else %}<div class="empty-state">Không tìm thấy dụng cụ.</div>{% endfor %}</div>
-</section>
-{% endblock %}
