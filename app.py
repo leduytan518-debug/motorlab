@@ -4,7 +4,7 @@ import os
 from flask import Flask, abort, render_template, request
 from database import get_connection, init_db
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".", static_folder=".", static_url_path="")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-change-me")
 
 
