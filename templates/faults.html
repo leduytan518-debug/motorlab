@@ -1,11 +1,106 @@
-{% extends 'base.html' %}
-{% block title %}Tra cứu lỗi | MOTORLAB{% endblock %}
+{% extends "base.html" %}
+{% block title %}Chẩn đoán & Tra cứu lỗi thông minh - {{ site_name }}{% endblock %}
+
 {% block content %}
-<section class="page-hero"><div class="container"><span class="eyebrow">DIAGNOSTIC LIBRARY</span><h1>Tra cứu lỗi phương tiện</h1><p>Tìm theo triệu chứng, mã lỗi hoặc dấu hiệu vận hành bất thường.</p></div></section>
-<section class="container section-block content-section">
-  <form class="filter-bar" method="get"><input type="search" name="q" value="{{ q }}" placeholder="Ví dụ: khó nổ, hụt ga, P0300..."><select name="type"><option value="">Ô tô và xe máy</option><option value="oto" {% if selected_type == 'oto' %}selected{% endif %}>Ô tô</option><option value="xemay" {% if selected_type == 'xemay' %}selected{% endif %}>Xe máy</option></select><button class="button-primary" type="submit">Tra cứu</button></form>
-  <div class="result-line">Có <strong>{{ faults|length }}</strong> mục phù hợp</div>
-  <div class="fault-list">{% for fault in faults %}<article class="fault-card"><div class="fault-top"><span class="type-pill">{{ 'Ô TÔ' if fault.vehicle_type == 'oto' else 'XE MÁY' }}</span><span class="severity severity-{{ 'high' if fault.severity == 'Cao' else 'medium' }}">Mức độ lưu ý: {{ fault.severity }}</span></div><h2>{{ fault.symptom }}</h2><p class="muted">{{ fault.model }} · Mã lỗi: {{ fault.code or 'Không xác định' }}</p><div class="fault-detail-grid"><div><h3>Nguyên nhân có thể</h3><p>{{ fault.causes }}</p></div><div><h3>Hướng kiểm tra</h3><p>{{ fault.checks }}</p></div><div class="solution-box"><h3>Hướng xử lý</h3><p>{{ fault.solution }}</p></div></div></article>{% else %}<div class="empty-state">Không tìm thấy kết quả. Hãy thử từ khóa rộng hơn.</div>{% endfor %}</div>
-  <div class="safety-note"><strong>Lưu ý an toàn:</strong> Đây là thông tin định hướng học tập, không phải kết luận chẩn đoán. Nếu xe có dấu hiệu mất phanh, quá nhiệt, rò rỉ nhiên liệu, khói/mùi khét hoặc lỗi liên quan túi khí/điện áp cao, hãy dừng sử dụng khi an toàn và nhờ kỹ thuật viên chuyên môn kiểm tra.</div>
+<section class="page-head">
+  <div class="container">
+    <span class="eyebrow">SMART DIAGNOSTICS • CHẨN ĐOÁN BỆNH XE</span>
+    <h1>Hệ thống chẩn đoán lỗi theo triệu chứng</h1>
+    <p class="lead">Nhập hiện tượng hư hỏng, chọn nhanh triệu chứng thực tế hoặc mã lỗi OBD/FI để khoanh vùng nguyên nhân và quy trình kiểm tra.</p>
+
+    <!-- KHUNG TÌM KIẾM & LỌC LOẠI XE -->
+    <div class="diag-toolbar">
+      <div class="diag-search-box">
+        <span class="diag-icon">🔍</span>
+        <input type="text" id="diag-input" placeholder="Nhập triệu chứng (VD: hụt ga, khó nổ, rung đầu, P0171, hao xăng...)" autocomplete="off">
+        <button type="button" id="diag-clear" class="diag-clear-btn" style="display: none;">✕</button>
+      </div>
+
+      <div class="diag-type-tabs">
+        <button type="button" class="type-tab active" data-vehicle="all">Tất cả xe</button>
+        <button type="button" class="type-tab" data-vehicle="Ô tô">🚗 Ô tô</button>
+        <button type="button" class="type-tab" data-vehicle="Xe máy">🛵 Xe máy</button>
+      </div>
+    </div>
+
+    <!-- BỘ CHỌN NHANH TRIỆU CHỨNG THỰC TẾ -->
+    <div class="symptom-quick-bar">
+      <span class="symptom-label">Triệu chứng phổ biến:</span>
+      <button type="button" class="symptom-chip active" data-symptom="">Tất cả</button>
+      <button type="button" class="symptom-chip" data-symptom="khó nổ">⚡ Đề khó nổ / Không nổ</button>
+      <button type="button" class="symptom-chip" data-symptom="hụt ga">💨 Hụt ga / Lì máy</button>
+      <button type="button" class="symptom-chip" data-symptom="hao xăng">⛽ Hao xăng bất thường</button>
+      <button type="button" class="symptom-chip" data-symptom="rung">📳 Rung giật / Rung đầu</button>
+      <button type="button" class="symptom-chip" data-symptom="nhiệt">🌡️ Quá nhiệt / Sôi nước</button>
+      <button type="button" class="symptom-chip" data-symptom="phanh">🛑 Kêu phanh / Mất phanh</button>
+    </div>
+  </div>
 </section>
-{% endblock %}
+
+<section class="section">
+  <div class="container">
+    <div class="diag-status-bar">
+      <span id="diag-count">Đang hiển thị toàn bộ danh sách bệnh & mã lỗi</span>
+    </div>
+
+    <!-- DANH SÁCH KẾT QUẢ CHẨN ĐOÁN -->
+    <div class="grid diag-grid" id="fault-list">
+      {% for f in faults %}
+      <article class="card diag-card" 
+               data-vehicle="{{ f.vehicle_type }}" 
+               data-search="{{ f.title|lower }} {{ f.symptoms|lower }} {{ f.causes|lower }} {{ f.fixes|lower }} {{ f.system|lower }}">
+        <div class="diag-card-top">
+          <span class="badge">{{ f.vehicle_type }}</span>
+          <span class="chip">{{ f.system }}</span>
+          {% if f.severity %}
+          <span class="severity-tag sev-{{ f.severity|lower }}">Mức độ: {{ f.severity }}</span>
+          {% endif %}
+        </div>
+
+        <h3 class="diag-title">{{ f.title }}</h3>
+
+        <div class="diag-body">
+          <div class="diag-block symptom-box">
+            <strong>⚠️ Triệu chứng nhận biết:</strong>
+            <p>{{ f.symptoms }}</p>
+          </div>
+
+          <div class="diag-block cause-box">
+            <strong>🔍 Nguyên nhân khả nghi:</strong>
+            <p>{{ f.causes }}</p>
+          </div>
+
+          <div class="diag-block fix-box">
+            <strong>🔧 Hướng kiểm tra & Khắc phục:</strong>
+            <p>{{ f.fixes }}</p>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    <!-- THÔNG BÁO KHI KHÔNG TÌM THẤY -->
+    <div id="diag-empty" class="card diag-empty-box" style="display: none;">
+      <h3>Không tìm thấy triệu chứng trùng khớp</h3>
+      <p>Thử nhập từ khóa ngắn gọn hơn (ví dụ: <em>"nổ", "ga", "xăng", "rung"</em>) hoặc bấm nút <strong>Tất cả</strong> để xem toàn bộ danh sách.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SCRIPT LỌC CHẨN ĐOÁN TỨC THÌ (LIVE FILTER) -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("diag-input");
+  const clearBtn = document.getElementById("diag-clear");
+  const vehicleTabs = document.querySelectorAll(".type-tab");
+  const symptomChips = document.querySelectorAll(".symptom-chip");
+  const cards = document.querySelectorAll(".diag-card");
+  const countEl = document.getElementById("diag-count");
+  const emptyBox = document.getElementById("diag-empty");
+
+  let currentVehicle = "all";
+  let currentSymptom = "";
+
+  function filterFaults() {
+    const query = searchInput.value.trim().toLowerCase();
+    clearBtn.
