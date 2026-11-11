@@ -1,13 +1,3 @@
-const menuButton = document.querySelector('.menu-toggle');
-const nav = document.querySelector('.main-nav');
-
-if (menuButton && nav) {
-  menuButton.addEventListener('click', () => {
-    const expanded = menuButton.getAttribute('aria-expanded') === 'true';
-    menuButton.setAttribute('aria-expanded', String(!expanded));
-    nav.classList.toggle('is-open', !expanded);
-  });
-}
 // 1. Xử lý mở/đóng menu trên màn hình nhỏ
 const menuButton = document.querySelector('.menu-toggle');
 const nav = document.querySelector('.main-nav');
