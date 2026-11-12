@@ -3,36 +3,40 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Thư viện kỹ thuật tra cứu ô tô, xe máy, lỗi thường gặp, linh kiện và hệ thống phun xăng điện tử.">
-  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <title>{% block title %}{{ site_name }} - Học Triết học Đa phương tiện{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
   <div class="app-layout">
-    <!-- THANH MENU BÊN TRÁI (SIDEBAR) -->
     <aside class="sidebar">
-      <div class="sidebar-top">
-        <a class="brand" href="{{ url_for('index') }}">
-          <span class="brand-mark">M</span>
-          <span>MOTOR<span class="brand-accent">LAB</span><small>THƯ VIỆN KỸ THUẬT</small></span>
-        </a>
-        <button class="menu-toggle" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
-      </div>
+      <div>
+        <div class="sidebar-top">
+          <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark">M</span>
+            <span>STUDY<span class="brand-accent">LAB</span><small>TRIẾT HỌC MÁC - LÊNIN</small></span>
+          </a>
+        </div>
 
-      <nav class="main-nav" aria-label="Điều hướng chính">
-        <div class="nav-label">DANH MỤC TRA CỨU</div>
-        <a href="{{ url_for('index') }}">🏠 Trang chủ</a>
-        <a href="{{ url_for('vehicles') }}">🚗 Danh mục xe</a>
-        <a href="{{ url_for('faults') }}">⚠️ Tra cứu mã lỗi</a>
-        <a href="{{ url_for('parts') }}">⚙️ Kho linh kiện</a>
-        <a href="{{ url_for('tools') }}">🔧 Dụng cụ sửa chữa</a>
-        <a href="{{ url_for('efi') }}">💡 Kiến thức FI / EFI</a>
-        <a class="nav-price" href="{{ url_for('prices') }}">📋 Bảng giá tham khảo</a>
-      </nav>
+        <nav class="main-nav" aria-label="Menu học tập">
+          <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">🏠 Trang chủ tổng quan</a>
+
+          <div class="nav-label" style="margin-top: 12px;">NỘI DUNG THEO CHƯƠNG</div>
+          <a href="{{ url_for('vehicles', chapter='Chương 1') }}" class="{% if request.args.get('chapter') == 'Chương 1' %}active{% endif %}">1️⃣ Chương 1: Khái luận Triết học</a>
+          <a href="{{ url_for('vehicles', chapter='Chương 2') }}" class="{% if request.args.get('chapter') == 'Chương 2' %}active{% endif %}">2️⃣ Chương 2: Duy vật biện chứng</a>
+          <a href="{{ url_for('vehicles', chapter='Chương 3') }}" class="{% if request.args.get('chapter') == 'Chương 3' %}active{% endif %}">3️⃣ Chương 3: Duy vật lịch sử</a>
+
+          <div class="nav-label" style="margin-top: 12px;">PHƯƠNG TIỆN CỦNG CỐ</div>
+          <a href="{{ url_for('efi') }}" class="{% if request.endpoint == 'efi' %}active{% endif %}">🧠 Sơ đồ tư duy (Mindmap)</a>
+          <a href="{{ url_for('vehicles') }}" class="{% if request.endpoint == 'vehicles' and not request.args.get('chapter') %}active{% endif %}">📖 Tóm gọn nội dung chính</a>
+          <a href="{{ url_for('parts') }}" class="{% if request.endpoint == 'parts' %}active{% endif %}">🗂️ Thẻ ghi nhớ (Flashcards)</a>
+          <a href="{{ url_for('faults') }}" class="{% if request.endpoint == 'faults' %}active{% endif %}">✅ Câu hỏi Trắc nghiệm</a>
+          <a href="{{ url_for('tools') }}" class="nav-price {% if request.endpoint == 'tools' %}active{% endif %}">⚡ Mẹo nhớ nhanh & Từ khóa</a>
+        </nav>
+      </div>
 
       <div class="sidebar-bottom">
         <button id="theme-toggle" class="theme-btn" type="button">
@@ -41,18 +45,10 @@
       </div>
     </aside>
 
-    <!-- KHU VỰC NỘI DUNG CHÍNH BÊN PHẢI -->
     <div class="main-area">
       <main class="content-wrap">
         {% block content %}{% endblock %}
       </main>
-
-      <footer class="site-footer">
-        <div class="container footer-inner">
-          <div><strong>MOTORLAB</strong> — Thư viện tra cứu và học tập kỹ thuật ô tô - xe máy.</div>
-          <div class="footer-note">Dữ liệu mẫu phục vụ học tập. Luôn đối chiếu tài liệu sửa chữa của đúng hãng và đời xe.</div>
-        </div>
-      </footer>
     </div>
   </div>
 </body>

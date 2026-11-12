@@ -1,13 +1,34 @@
-{% extends 'base.html' %}
-{% block title %}Thư viện FI / EFI | MOTORLAB{% endblock %}
+{% extends "base.html" %}
+{% block title %}Sơ đồ hóa Quy luật - {{ site_name }}{% endblock %}
+
 {% block content %}
-<section class="page-hero"><div class="container"><span class="eyebrow">FUEL INJECTION TECHNOLOGY</span><h1>Thư viện FI / EFI</h1><p>Tìm hiểu hệ thống phun nhiên liệu điện tử trên xe máy và ô tô.</p></div></section>
-<section class="container section-block content-section">
-  <div class="efi-intro"><div><span class="eyebrow">01 / OVERVIEW</span><h2>FI / EFI là gì?</h2><p>FI (Fuel Injection) hoặc EFI (Electronic Fuel Injection) là cách gọi hệ thống phun nhiên liệu có điều khiển điện tử. Bộ điều khiển nhận tín hiệu từ các cảm biến, xử lý dữ liệu rồi điều khiển kim phun và những cơ cấu liên quan để cung cấp nhiên liệu phù hợp với điều kiện vận hành.</p><p>Xe máy và ô tô có nguyên lý điều khiển tương đồng, nhưng số lượng cảm biến, cấu trúc hệ thống, áp suất nhiên liệu và phương pháp chẩn đoán khác nhau tùy loại động cơ.</p></div><div class="efi-emblem">EFI<span>Electronic<br>Fuel Injection</span></div></div>
-  <div class="section-heading"><div><span class="eyebrow">02 / MAIN COMPONENTS</span><h2>Các bộ phận chính</h2><p>Danh sách khái quát; cấu hình thực tế tùy mẫu xe.</p></div></div>
-  <div class="efi-grid"><article><span>01</span><h3>ECU / ECM</h3><p>Bộ điều khiển điện tử, nhận tín hiệu cảm biến và tính toán thời điểm, lượng phun theo chiến lược điều khiển.</p></article><article><span>02</span><h3>Kim phun</h3><p>Phun nhiên liệu vào vị trí được thiết kế với lưu lượng và thời gian mở do bộ điều khiển quyết định.</p></article><article><span>03</span><h3>Bơm và lọc nhiên liệu</h3><p>Cấp và lọc nhiên liệu. Áp suất làm việc phải đúng thông số của hệ thống cụ thể.</p></article><article><span>04</span><h3>Cảm biến TPS</h3><p>Ghi nhận vị trí bướm ga hoặc góc mở bướm ga để ECU đánh giá yêu cầu tải của người lái.</p></article><article><span>05</span><h3>Cảm biến MAP / MAF</h3><p>Cung cấp thông tin về áp suất đường ống nạp hoặc lượng không khí nạp, tùy cấu hình động cơ.</p></article><article><span>06</span><h3>Cảm biến nhiệt độ</h3><p>ECT hoặc cảm biến nhiệt độ khí nạp giúp ECU điều chỉnh hoạt động theo điều kiện nhiệt độ.</p></article><article><span>07</span><h3>Cảm biến O2</h3><p>Trên các cấu hình phù hợp, cảm biến oxy phản hồi thành phần khí xả để hỗ trợ hiệu chỉnh hòa khí.</p></article><article><span>08</span><h3>Dây dẫn và giắc nối</h3><p>Kết nối nguồn điện, cảm biến và cơ cấu chấp hành. Lỗi tiếp xúc có thể gây triệu chứng không ổn định.</p></article></div>
-  <div class="section-heading"><div><span class="eyebrow">03 / DIAGNOSTIC FLOW</span><h2>Quy trình tìm hiểu khi đèn FI sáng</h2></div></div>
-  <div class="steps-list"><div><b>01</b><div><h3>Ghi nhận triệu chứng</h3><p>Thời điểm xuất hiện, điều kiện vận hành, đèn cảnh báo và lịch sử sửa chữa.</p></div></div><div><b>02</b><div><h3>Đọc mã lỗi đúng thiết bị</h3><p>Dùng máy chẩn đoán tương thích với hãng, mẫu xe và đời xe; lưu mã lỗi trước khi xóa.</p></div></div><div><b>03</b><div><h3>Kiểm tra theo tài liệu kỹ thuật</h3><p>Đối chiếu sơ đồ điện, thông số đo và quy trình của nhà sản xuất; không thay linh kiện theo phỏng đoán.</p></div></div><div><b>04</b><div><h3>Xử lý và xác nhận</h3><p>Sửa nguyên nhân, kiểm tra lại hoạt động và xác nhận mã lỗi không quay lại trong điều kiện phù hợp.</p></div></div></div>
-  <div class="safety-note"><strong>Cảnh báo:</strong> Không tự tháo đường ống nhiên liệu, đo áp suất hoặc chọc dò giắc ECU nếu chưa được đào tạo và không có thiết bị phù hợp. Hệ thống phun trực tiếp trên ô tô có thể làm việc ở áp suất rất cao. Với xe hybrid/EV, cần quy trình an toàn điện áp cao riêng.</div>
+<section class="page-head center-head">
+  <div class="container">
+    <span class="eyebrow"> CORE LAWS & DIALECTICS</span>
+    <h1>Sơ đồ hóa 3 Quy luật & 6 Cặp phạm trù</h1>
+    <p class="lead">Nắm trọn hạt nhân của Phép biện chứng duy vật chỉ trong một trang tóm tắt.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+      <article class="card">
+        <span class="badge">QUY LUẬT 01 • CÁCH THỨC</span>
+        <h3 style="margin: 10px 0;">Quy luật Lượng - Chất</h3>
+        <p>Mọi sự vật đều là sự thống nhất giữa Lượng và Chất. Sự thay đổi dần dần về <strong>Lượng</strong> vượt qua giới hạn <strong>Độ</strong> tới <strong>Điểm nút</strong> sẽ thực hiện <strong>Bước nhảy</strong> làm thay đổi căn bản về <strong>Chất</strong>.</p>
+      </article>
+      <article class="card">
+        <span class="badge">QUY LUẬT 02 • NGUỒN GỐC / ĐỘNG LỰC</span>
+        <h3 style="margin: 10px 0;">Quy luật Mâu thuẫn</h3>
+        <p>Là hạt nhân của phép biện chứng. Sự thống nhất (tương đối, tạm thời) và đấu tranh (tuyệt đối) giữa các mặt đối lập chính là <strong>nguồn gốc, động lực bên trong</strong> của mọi sự phát triển.</p>
+      </article>
+      <article class="card">
+        <span class="badge">QUY LUẬT 03 • KHUYNH HƯỚNG</span>
+        <h3 style="margin: 10px 0;">Quy luật Phủ định của phủ định</h3>
+        <p>Chỉ ra <strong>khuynh hướng</strong> phát triển của sự vật không đi theo đường thẳng mà theo <strong>đường xoáy ốc</strong> (có tính khách quan, tính kế thừa biện chứng và tính chu kỳ).</p>
+      </article>
+    </div>
+  </div>
 </section>
 {% endblock %}

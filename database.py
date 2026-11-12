@@ -1,148 +1,195 @@
-"""SQLite database setup and sample data for the vehicle technical library."""
-from pathlib import Path
+import json
+import os
 import sqlite3
+import urllib.request
+from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = BASE_DIR / "instance" / "garage_library.db"
-
+DB_PATH = Path(__file__).resolve().parent / "studylab.db"
 
 def get_connection():
-    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(DATABASE_PATH)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA foreign_keys = ON")
-    return connection
-
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
-    with get_connection() as conn:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS vehicles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                vehicle_type TEXT NOT NULL,
-                brand TEXT NOT NULL,
-                model TEXT NOT NULL,
-                year INTEGER,
-                engine TEXT,
-                fuel_system TEXT,
-                description TEXT
-            );
+    conn = get_connection()
+    cur = conn.cursor()
 
-            CREATE TABLE IF NOT EXISTS faults (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                vehicle_type TEXT NOT NULL,
-                model TEXT NOT NULL DEFAULT 'Nhiều dòng xe',
-                code TEXT,
-                symptom TEXT NOT NULL,
-                causes TEXT NOT NULL,
-                checks TEXT NOT NULL,
-                solution TEXT NOT NULL,
-                severity TEXT NOT NULL DEFAULT 'Trung bình'
-            );
-
-            CREATE TABLE IF NOT EXISTS parts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                vehicle_type TEXT NOT NULL,
-                name TEXT NOT NULL,
-                compatible TEXT NOT NULL,
-                function TEXT NOT NULL,
-                price_min INTEGER,
-                price_max INTEGER,
-                price_note TEXT
-            );
-
-            CREATE TABLE IF NOT EXISTS tools (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                category TEXT NOT NULL,
-                usage TEXT NOT NULL,
-                caution TEXT
-            );
-
-            CREATE TABLE IF NOT EXISTS repair_prices (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                vehicle_type TEXT NOT NULL,
-                job TEXT NOT NULL,
-                price_min INTEGER,
-                price_max INTEGER,
-                note TEXT
-            );
-            """
+    # 1. Bảng Chuyên đề (thay cho vehicles)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS topics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT,
+            title TEXT,
+            subtitle TEXT,
+            summary TEXT,
+            key_points TEXT,
+            exam_weight TEXT
         )
+    """)
 
-        # Add starter data only on the first run. These are learning/demo records,
-        # not verified live vehicle specifications or market quotations.
-        if conn.execute("SELECT COUNT(*) FROM vehicles").fetchone()[0] == 0:
-            conn.executemany(
-                """INSERT INTO vehicles
-                   (vehicle_type, brand, model, year, engine, fuel_system, description)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                [
-                    ("oto", "Toyota", "Vios", 2022, "1.5L xăng", "Phun xăng điện tử", "Mẫu ô tô du lịch phổ biến. Thông số cụ thể cần đối chiếu theo phiên bản và thị trường."),
-                    ("oto", "Honda", "City", 2023, "1.5L xăng", "Phun xăng điện tử", "Sedan cỡ nhỏ; dữ liệu mẫu để thử chức năng tra cứu."),
-                    ("oto", "Ford", "Ranger", 2022, "2.0L diesel", "Common Rail", "Bán tải; cần chọn đúng phiên bản động cơ khi tra cứu phụ tùng."),
-                    ("xemay", "Honda", "Wave Alpha", 2023, "110 cc", "Phun xăng điện tử tùy phiên bản/thị trường", "Xe số phổ thông; hãy kiểm tra đúng phiên bản trước khi mua phụ tùng."),
-                    ("xemay", "Yamaha", "Exciter 155", 2023, "155 cc", "Phun xăng điện tử", "Xe côn tay; thông số và phụ tùng có thể khác theo đời xe."),
-                    ("xemay", "Honda", "Air Blade 160", 2023, "156,9 cc", "Phun xăng điện tử", "Xe tay ga; cần đối chiếu mã phụ tùng theo số khung/phiên bản."),
-                ],
-            )
+    # 2. Bảng Ngân hàng câu hỏi trắc nghiệm (thay cho faults)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chapter TEXT,
+            question TEXT UNIQUE,
+            option_a TEXT,
+            option_b TEXT,
+            option_c TEXT,
+            option_d TEXT,
+            correct_answer TEXT,
+            explanation TEXT
+        )
+    """)
 
-        if conn.execute("SELECT COUNT(*) FROM faults").fetchone()[0] == 0:
-            conn.executemany(
-                """INSERT INTO faults
-                   (vehicle_type, model, code, symptom, causes, checks, solution, severity)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                [
-                    ("oto", "Nhiều dòng ô tô", "P0300", "Động cơ rung, bỏ máy hoặc tăng tốc yếu", "Có thể liên quan đến bugi, bobin đánh lửa, kim phun, áp suất nhiên liệu hoặc độ kín buồng đốt.", "Đọc mã lỗi bằng máy chẩn đoán; kiểm tra dữ liệu misfire và lịch sử bảo dưỡng. Không tự tháo hệ thống nhiên liệu khi chưa có dụng cụ và kiến thức phù hợp.", "Khoanh vùng theo dữ liệu chẩn đoán rồi kiểm tra từng hệ thống. Thay linh kiện chỉ sau khi xác định nguyên nhân.", "Cao"),
-                    ("oto", "Nhiều dòng ô tô", "P0128", "Động cơ lâu đạt nhiệt độ làm việc", "Có thể do van hằng nhiệt kẹt mở, cảm biến nhiệt độ nước làm mát hoặc hệ thống làm mát.", "Kiểm tra mức nước làm mát khi động cơ đã nguội; đọc nhiệt độ ECT trên máy chẩn đoán và kiểm tra rò rỉ.", "Sửa chữa hệ thống làm mát theo tài liệu sửa chữa đúng mẫu xe. Không mở nắp két nước khi động cơ nóng.", "Trung bình"),
-                    ("oto", "Nhiều dòng ô tô", "Không xác định", "Xe khó khởi động hoặc không khởi động", "Có thể do ắc quy yếu, máy khởi động, hệ thống đánh lửa, cấp nhiên liệu hoặc chống trộm.", "Quan sát đèn báo, kiểm tra tình trạng ắc quy và nghe tiếng máy khởi động. Đọc mã lỗi nếu có thiết bị phù hợp.", "Kiểm tra theo quy trình của nhà sản xuất; đưa xe đến kỹ thuật viên nếu có mùi nhiên liệu, khói hoặc dây điện nóng bất thường.", "Cao"),
-                    ("xemay", "Nhiều xe máy FI", "Không xác định", "Xe FI khó nổ, nhất là khi để lâu", "Có thể do ắc quy yếu, bugi mòn, lọc gió bẩn, áp suất nhiên liệu không phù hợp hoặc cảm biến/bơm xăng.", "Kiểm tra điện áp ắc quy, bugi và lọc gió theo sách hướng dẫn; quan sát đèn FI. Không tự mở đường ống xăng áp suất cao.", "Đọc mã lỗi bằng thiết bị tương thích, đo kiểm theo tài liệu sửa chữa và chỉ thay chi tiết sau khi xác định nguyên nhân.", "Trung bình"),
-                    ("xemay", "Nhiều xe máy", "Không xác định", "Xe bị hụt ga hoặc giật khi tăng tốc", "Có thể do lọc gió, bugi, kim phun, nhiên liệu, truyền động hoặc cảm biến bướm ga.", "Ghi nhận điều kiện xuất hiện lỗi; kiểm tra bảo dưỡng cơ bản và đọc mã lỗi FI nếu xe có hệ thống này.", "Kiểm tra theo từng hệ thống. Với xe tay ga, cần phân biệt lỗi động cơ và lỗi bộ truyền động CVT.", "Trung bình"),
-                    ("xemay", "Nhiều xe máy", "Không xác định", "Đèn báo FI sáng bất thường", "ECU có thể ghi nhận lỗi ở cảm biến, cơ cấu chấp hành, nguồn điện hoặc dây dẫn.", "Không đoán lỗi chỉ dựa vào đèn báo. Dùng thiết bị đọc lỗi phù hợp với hãng và đời xe; kiểm tra giắc cắm, dây dẫn theo sơ đồ.", "Ghi lại mã lỗi trước khi xóa; xử lý nguyên nhân rồi kiểm tra lại. Không nối tắt chân giắc nếu không có sơ đồ chính xác.", "Cao"),
-                ],
-            )
+    # 3. Bảng Kho khái niệm & Phạm trù (thay cho parts)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS concepts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chapter TEXT,
+            name TEXT,
+            definition TEXT,
+            relation TEXT,
+            exam_tip TEXT,
+            note TEXT
+        )
+    """)
 
-        if conn.execute("SELECT COUNT(*) FROM parts").fetchone()[0] == 0:
-            conn.executemany(
-                """INSERT INTO parts
-                   (vehicle_type, name, compatible, function, price_min, price_max, price_note)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                [
-                    ("oto", "Bugi đánh lửa", "Ô tô động cơ xăng; phải chọn đúng mã", "Tạo tia lửa đốt cháy hòa khí trong xi-lanh.", 0, 0, "Chưa có báo giá được xác minh; phụ thuộc mã bugi và thương hiệu."),
-                    ("oto", "Lọc dầu động cơ", "Ô tô; chọn theo mã động cơ và đời xe", "Lọc cặn bẩn trong dầu bôi trơn.", 0, 0, "Chưa có báo giá được xác minh."),
-                    ("oto", "Cảm biến oxy (O2)", "Một số động cơ xăng; cần đúng chuẩn giắc và mã", "Gửi thông tin về lượng oxy trong khí xả cho ECU điều khiển hòa khí.", 0, 0, "Chưa có báo giá được xác minh."),
-                    ("oto", "Kim phun nhiên liệu", "Tùy hệ thống phun xăng/diesel và mã động cơ", "Phun nhiên liệu theo lệnh điều khiển, đúng lượng và thời điểm.", 0, 0, "Giá thay đổi lớn theo loại phun và mẫu xe."),
-                    ("xemay", "Bugi", "Xe máy; chọn đúng nhiệt trị và mã bugi", "Tạo tia lửa đốt cháy hòa khí trong động cơ.", 0, 0, "Chưa có báo giá được xác minh."),
-                    ("xemay", "Kim phun FI", "Xe máy phun xăng điện tử; chọn đúng mã", "Phun nhiên liệu dạng sương theo tín hiệu điều khiển ECU.", 0, 0, "Chưa có báo giá được xác minh."),
-                    ("xemay", "Bơm xăng điện", "Xe máy FI; cần đúng áp suất và giắc điện", "Cấp nhiên liệu từ bình đến hệ thống phun theo áp suất thiết kế.", 0, 0, "Chưa có báo giá được xác minh."),
-                    ("xemay", "Lọc gió", "Xe máy; đối chiếu đời xe và kiểu hộp lọc", "Lọc bụi trong không khí trước khi đi vào động cơ.", 0, 0, "Chưa có báo giá được xác minh."),
-                ],
-            )
+    # 4. Bảng Phương pháp & Mẹo làm bài (thay cho tools)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS methods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            group_name TEXT,
+            name TEXT,
+            usage TEXT,
+            how_to_apply TEXT
+        )
+    """)
 
-        if conn.execute("SELECT COUNT(*) FROM tools").fetchone()[0] == 0:
-            conn.executemany(
-                "INSERT INTO tools (name, category, usage, caution) VALUES (?, ?, ?, ?)",
-                [
-                    ("Bộ khẩu và cần siết", "Dụng cụ cơ khí", "Tháo/lắp bu-lông, đai ốc nhiều kích cỡ.", "Dùng đúng cỡ; không dùng lực quá mức gây tuôn ren."),
-                    ("Cờ lê lực", "Dụng cụ đo/siết", "Siết bu-lông theo mô-men quy định của nhà sản xuất.", "Tra thông số đúng mẫu xe; không tự ước lượng mô-men."),
-                    ("Đồng hồ vạn năng", "Dụng cụ điện", "Đo điện áp, điện trở và kiểm tra thông mạch.", "Chọn đúng thang đo; không đo điện trở khi mạch đang có điện."),
-                    ("Máy chẩn đoán OBD-II", "Thiết bị chẩn đoán ô tô", "Đọc/xóa mã lỗi và xem dữ liệu xe hỗ trợ chuẩn OBD-II.", "Không phải xe/đời xe nào cũng hỗ trợ đầy đủ chức năng; không xóa lỗi trước khi ghi nhận."),
-                    ("Máy chẩn đoán FI xe máy", "Thiết bị chẩn đoán xe máy", "Đọc mã lỗi và dữ liệu trên các dòng xe tương thích.", "Phải đúng hãng, đời xe và giao thức; làm theo hướng dẫn thiết bị."),
-                    ("Thước lá", "Dụng cụ đo", "Đo khe hở xupap hoặc khe hở kỹ thuật theo tài liệu.", "Đo khi động cơ ở điều kiện nhiệt độ được nhà sản xuất yêu cầu."),
-                    ("Đồng hồ đo áp suất lốp", "Dụng cụ kiểm tra", "Kiểm tra áp suất lốp nguội.", "Bơm theo mức khuyến nghị trên xe hoặc sách hướng dẫn."),
-                ],
-            )
+    # 5. Bảng Cấu trúc đề & Phân bổ điểm (thay cho prices)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS exam_structure (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chapter TEXT,
+            topic_name TEXT,
+            question_count TEXT,
+            score_weight TEXT,
+            note TEXT
+        )
+    """)
 
-        if conn.execute("SELECT COUNT(*) FROM repair_prices").fetchone()[0] == 0:
-            conn.executemany(
-                "INSERT INTO repair_prices (vehicle_type, job, price_min, price_max, note) VALUES (?, ?, ?, ?, ?)",
-                [
-                    ("oto", "Kiểm tra bằng máy chẩn đoán", 0, 0, "Cần khảo sát gara địa phương; chưa nhập giá xác minh."),
-                    ("oto", "Thay dầu và lọc dầu", 0, 0, "Phụ thuộc dung tích dầu, loại dầu, lọc và công thay."),
-                    ("oto", "Kiểm tra hệ thống phanh", 0, 0, "Phụ thuộc tình trạng và cấu hình phanh."),
-                    ("xemay", "Kiểm tra lỗi FI", 0, 0, "Phụ thuộc thiết bị, dòng xe và gara."),
-                    ("xemay", "Thay dầu động cơ", 0, 0, "Phụ thuộc dung tích và loại dầu."),
-                    ("xemay", "Kiểm tra/thay bugi", 0, 0, "Phụ thuộc mã bugi và mẫu xe."),
-                ],
-            )
+    # Nạp dữ liệu mặc định nếu mới khởi tạo
+    if cur.execute("SELECT COUNT(*) FROM topics").fetchone()[0] == 0:
+        cur.executemany("INSERT INTO topics (category, title, subtitle, summary, key_points, exam_weight) VALUES (?,?,?,?,?,?)", [
+            ("Chương 1", "Triết học và Vấn đề cơ bản của Triết học", "Khái luận Triết học Mác - Lênin", "Nắm vững nguồn gốc triết học, hai mặt vấn đề cơ bản của triết học (Bản thể luận & Nhận thức luận).", "Chủ nghĩa duy vật, Chủ nghĩa duy tâm, Thuyết khả tri, Bất khả tri", "Chiếm 15% đề thi"),
+            ("Chương 2", "Vật chất và Ý thức", "Chủ nghĩa duy vật biện chứng", "Định nghĩa vật chất của V.I.Lênin, nguồn gốc - bản chất của ý thức và mối quan hệ biện chứng giữa vật chất và ý thức.", "Thực tại khách quan, Lao động & Ngôn ngữ, Tôn trọng khách quan", "Chiếm 25% đề thi"),
+            ("Chương 2", "Hai nguyên lý & Sáu cặp phạm trù", "Phép biện chứng duy vật", "Nguyên lý về mối liên hệ phổ biến, Nguyên lý về sự phát triển và 6 cặp phạm trù cơ bản.", "Quan điểm toàn diện, Lịch sử - cụ thể, Cái chung - Cái riêng, Nguyên nhân - Kết quả", "Chiếm 20% đề thi"),
+            ("Chương 2", "Ba quy luật cơ bản của Phép biện chứng", "Hạt nhân của phép biện chứng", "Quy luật Lượng - Chất (cách thức), Quy luật Mâu thuẫn (nguồn gốc, động lực), Quy luật Phủ định của phủ định (khuynh hướng).", "Độ, Điểm nút, Bước nhảy, Thống nhất và đấu tranh giữa các mặt đối lập", "Chiếm 20% đề thi"),
+            ("Chương 3", "Học thuyết Hình thái Kinh tế - Xã hội", "Chủ nghĩa duy vật lịch sử", "Quy luật Lực lượng sản xuất và Quan hệ sản xuất; Mối quan hệ biện chứng giữa Cơ sở hạ tầng và Kiến trúc thượng tầng.", "Công cụ lao động, Lực lượng sản xuất quyết định QHSX, CSHT quyết định KTTT", "Chiếm 15% đề thi"),
+            ("Chương 3", "Giai cấp, Nhà nước & Con người", "Chủ nghĩa duy vật lịch sử", "Nguồn gốc giai cấp, bản chất nhà nước, mối quan hệ Tồn tại xã hội - Ý thức xã hội và bản chất con người.", "Tổng hòa các quan hệ xã hội, Quần chúng nhân dân là chủ thể lịch sử", "Chiếm 5% đề thi"),
+        ])
+
+    if cur.execute("SELECT COUNT(*) FROM questions").fetchone()[0] == 0:
+        cur.executemany("""
+            INSERT OR IGNORE INTO questions (chapter, question, option_a, option_b, option_c, option_d, correct_answer, explanation)
+            VALUES (?,?,?,?,?,?,?,?)
+        """, [
+            ("Chương 1", "Vấn đề cơ bản lớn của mọi triết học, đặc biệt là của triết học hiện đại là gì?", "Quan hệ giữa con người và tự nhiên", "Quan hệ giữa tư duy và tồn tại (giữa ý thức và vật chất)", "Quan hệ giữa lý luận và thực tiễn", "Quan hệ giữa vật chất và vận động", "B", "Theo Ph.Ăngghen, vấn đề cơ bản lớn của mọi triết học là mối quan hệ giữa tư duy và tồn tại."),
+            ("Chương 1", "Mặt thứ hai của vấn đề cơ bản của triết học trả lời cho câu hỏi nào?", "Vật chất và ý thức cái nào có trước?", "Cái nào quyết định cái nào?", "Con người có khả năng nhận thức được thế giới hay không?", "Thế giới tồn tại hữu hạn hay vô hạn?", "C", "Mặt thứ nhất (Bản thể luận): cái nào có trước. Mặt thứ hai (Nhận thức luận): con người có nhận thức được thế giới không."),
+            ("Chương 2", "Theo V.I.Lênin, thuộc tính chung nhất và quan trọng nhất để phân biệt vật chất với ý thức là gì?", "Vận động không ngừng", "Tồn tại trong không gian và thời gian", "Thực tại khách quan (tồn tại độc lập với ý thức con người)", "Có khối lượng và cấu trúc nguyên tử", "C", "Thực tại khách quan là thuộc tính cơ bản nhất của mọi dạng vật chất."),
+            ("Chương 2", "Nguồn gốc xã hội trực tiếp và quan trọng nhất quyết định sự ra đời của ý thức là gì?", "Bộ óc con người và thế giới khách quan", "Lao động và ngôn ngữ", "Sự phát triển của khoa học tự nhiên", "Giao tiếp bầy đàn của loài vượn cổ", "B", "Bộ óc và thế giới khách quan là nguồn gốc tự nhiên; Lao động và ngôn ngữ là nguồn gốc xã hội."),
+            ("Chương 2", "Quy luật nào chỉ ra 'nguồn gốc, động lực' cơ bản của mọi sự vận động và phát triển?", "Quy luật Lượng - Chất", "Quy luật Thống nhất và đấu tranh các mặt đối lập (Mâu thuẫn)", "Quy luật Phủ định của phủ định", "Quy luật QHSX phù hợp với trình độ LLSX", "B", "Mâu thuẫn = Nguồn gốc/động lực; Lượng - Chất = Cách thức; Phủ định của phủ định = Khuynh hướng."),
+            ("Chương 3", "Yếu tố nào được coi là động nhất, cách mạng nhất trong Lực lượng sản xuất?", "Người lao động", "Đối tượng lao động", "Công cụ lao động", "Tư liệu sản xuất", "C", "Công cụ lao động luôn cải tiến không ngừng, là yếu tố động nhất và cách mạng nhất trong LLSX."),
+        ])
+
+    if cur.execute("SELECT COUNT(*) FROM concepts").fetchone()[0] == 0:
+        cur.executemany("INSERT INTO concepts (chapter, name, definition, relation, exam_tip, note) VALUES (?,?,?,?,?,?)", [
+            ("Chương 2", "Phạm trù Vật chất", "Phạm trù triết học dùng để chỉ thực tại khách quan được đem lại cho con người trong cảm giác.", "Đối lập và quyết định Ý thức", "Từ khóa: Thực tại khách quan", "Luôn chọn đáp án có cụm từ 'Thực tại khách quan' khi hỏi định nghĩa vật chất của Lênin."),
+            ("Chương 2", "Lao động & Ngôn ngữ", "Hai yếu tố tạo thành nguồn gốc xã hội trực tiếp quyết định sự hình thành và phát triển của ý thức.", "Thuộc học thuyết về Ý thức", "Từ khóa: Nguồn gốc xã hội", "Nếu đề hỏi 'nguồn gốc tự nhiên' thì chọn Bộ óc người; hỏi 'nguồn gốc xã hội' thì chọn Lao động & Ngôn ngữ."),
+            ("Chương 2", "Độ - Điểm nút - Bước nhảy", "Ba khái niệm cốt lõi giải thích cách thức vận động trong Quy luật chuyển hóa từ Lượng thành Chất.", "Thuộc Quy luật Lượng - Chất", "Từ khóa: Cách thức phát triển", "Chưa đổi chất = Độ; Thời điểm đủ lượng = Điểm nút; Quá trình biến đổi chất = Bước nhảy."),
+            ("Chương 2", "Thực tiễn", "Toàn bộ hoạt động vật chất - cảm tính, có tính lịch sử - xã hội của con người nhằm cải tạo tự nhiên và xã hội.", "Cơ sở, động lực, mục đích của nhận thức", "Từ khóa: Hoạt động vật chất", "Hoạt động sản xuất vật chất là hình thức cơ bản và quan trọng nhất của thực tiễn."),
+            ("Chương 3", "Lực lượng sản xuất (LLSX)", "Sự kết hợp giữa người lao động với tư liệu sản xuất, tạo ra sức sản xuất và năng lực thực tiễn.", "Quyết định Quan hệ sản xuất (QHSX)", "Từ khóa: Nền tảng vật chất", "Người lao động là nhân tố hàng đầu; Công cụ lao động là yếu tố động nhất, cách mạng nhất."),
+            ("Chương 3", "Cơ sở hạ tầng (CSHT)", "Toàn bộ những quan hệ sản xuất của một xã hội trong sự vận động hiện thực của chúng hợp thành cơ cấu kinh tế.", "Quyết định Kiến trúc thượng tầng (KTTT)", "Từ khóa: Quan hệ sản xuất (Kinh tế)", "Đừng nhầm CSHT trong triết học với điện, đường, trường, trạm! CSHT trong triết học là Kinh tế (các QHSX)."),
+        ])
+
+    if cur.execute("SELECT COUNT(*) FROM methods").fetchone()[0] == 0:
+        cur.executemany("INSERT INTO methods (group_name, name, usage, how_to_apply) VALUES (?,?,?,?)", [
+            ("Mẹo nhận diện", "Phân biệt Duy vật và Duy tâm", "Dùng cho các câu hỏi Chương 1 nhận diện trường phái triết học.", "Hễ đề nhắc 'Vật chất/Tự nhiên có trước' -> Duy vật. Nhắc 'Ý thức/Tinh thần/Thượng đế/Ý niệm tuyệt đối có trước' -> Duy tâm."),
+            ("Mẹo nhận diện", "Phân biệt Biện chứng và Siêu hình", "Dùng cho câu hỏi phương pháp luận Chương 1 & Chương 2.", "Thấy 'Cô lập, tĩnh tại, bất biến, chỉ thấy cây không thấy rừng' -> Siêu hình. Thấy 'Liên hệ, vận động, chuyển hóa, phát triển' -> Biện chứng."),
+            ("Mẹo từ khóa", "3 Quy luật cơ bản (Chương 2)", "Tránh nhầm lẫn vai trò của 3 quy luật trong Phép biện chứng duy vật.", "Hỏi 'Cách thức' -> Chọn Lượng - Chất. Hỏi 'Nguồn gốc, động lực, hạt nhân' -> Chọn Mâu thuẫn. Hỏi 'Khuynh hướng, xoáy ốc' -> Chọn Phủ định của phủ định."),
+            ("Mẹo từ khóa", "Tránh bẫy Cơ sở hạ tầng (Chương 3)", "Câu bẫy kinh điển nhất trong các đề thi trắc nghiệm Triết học.", "Nếu đáp án liệt kê 'đường sá, cầu cống, nhà máy' là Cơ sở hạ tầng -> Loại ngay! CSHT trong Triết học gồm: QHSX thống trị, QHSX tàn dư và QHSX mầm mống."),
+            ("Phương pháp luận", "Nguyên tắc Toàn diện & Lịch sử - Cụ thể", "Dùng cho câu hỏi rút ra bài học từ Nguyên lý mối liên hệ phổ biến.", "Đề hỏi cơ sở lý luận của 'Quan điểm toàn diện' -> Chọn ngay Nguyên lý về mối liên hệ phổ biến."),
+            ("Phương pháp luận", "Nguyên tắc Khách quan", "Dùng cho câu hỏi rút ra từ mối quan hệ giữa Vật chất và Ý thức.", "Xuất phát từ thực tế khách quan, tôn trọng quy luật khách quan đồng thời phát huy tính năng động chủ quan. Bệnh 'chủ quan duy ý chí' là do vi phạm nguyên tắc này."),
+        ])
+
+    if cur.execute("SELECT COUNT(*) FROM exam_structure").fetchone()[0] == 0:
+        cur.executemany("INSERT INTO exam_structure (chapter, topic_name, question_count, score_weight, note) VALUES (?,?,?,?,?)", [
+            ("Chương 1", "Khái luận về Triết học và Triết học Mác - Lênin", "6 - 8 câu", "1.5 - 2.0 điểm", "Tập trung vào Vấn đề cơ bản của triết học và các hình thức Chủ nghĩa duy vật."),
+            ("Chương 2", "Vật chất, Ý thức và mối quan hệ biện chứng", "8 - 10 câu", "2.0 - 2.5 điểm", "Định nghĩa vật chất của Lênin, nguồn gốc/bản chất ý thức và nguyên tắc khách quan."),
+            ("Chương 2", "2 Nguyên lý, 6 Cặp phạm trù & 3 Quy luật cơ bản", "12 - 15 câu", "3.0 - 3.75 điểm", "Phần trọng tâm nhất của đề thi; thường hỏi vận dụng ca dao, tục ngữ vào quy luật."),
+            ("Chương 2", "Thực tiễn và Lý luận nhận thức", "4 - 5 câu", "1.0 - 1.25 điểm", "Ba hình thức thực tiễn và con đường biện chứng của sự nhận thức (Trực quan sinh động -> Tư duy trừu tượng)."),
+            ("Chương 3", "Hình thái Kinh tế - Xã hội (LLSX - QHSX, CSHT - KTTT)", "6 - 8 câu", "1.5 - 2.0 điểm", "Quy luật sự phù hợp của QHSX với trình độ phát triển của LLSX."),
+            ("Chương 3", "Giai cấp, Nhà nước, Ý thức xã hội & Con người", "4 câu", "1.0 điểm", "Tính độc lập tương đối của ý thức xã hội và bản chất con người."),
+        ])
+
+    conn.commit()
+    conn.close()
+
+def generate_questions_with_ai(chapter="Chương 2", count=5, custom_api_key=""):
+    """Gọi trực tiếp Google Gemini API để tự động sinh thêm câu hỏi mới vào ngân hàng"""
+    api_key = custom_api_key.strip() or os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return {"success": False, "message": "Hãy dán mã GEMINI_API_KEY vào ô bên cạnh để AI tạo câu hỏi mới!"}
+
+    prompt = f"""
+    Hãy đóng vai giảng viên đại học môn Triết học Mác - Lênin.
+    Tạo ra {count} câu hỏi trắc nghiệm khách quan mới (không trùng lặp), chuẩn giáo trình thuộc {chapter}.
+    Trả về KẾT QUẢ DUY NHẤT là một mảng JSON chuẩn:
+    [
+      {{
+        "chapter": "{chapter}",
+        "question": "Nội dung câu hỏi...",
+        "option_a": "Phương án A...",
+        "option_b": "Phương án B...",
+        "option_c": "Phương án C...",
+        "option_d": "Phương án D...",
+        "correct_answer": "A",
+        "explanation": "Giải thích ngắn gọn..."
+      }}
+    ]
+    """
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"responseMimeType": "application/json"}
+    }
+    try:
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            items = json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
+            conn = get_connection()
+            cur = conn.cursor()
+            added = 0
+            for item in items:
+                cur.execute("""
+                    INSERT OR IGNORE INTO questions (chapter, question, option_a, option_b, option_c, option_d, correct_answer, explanation)
+                    VALUES (?,?,?,?,?,?,?,?)
+                """, (
+                    item.get("chapter", chapter),
+                    item.get("question", "").strip(),
+                    item.get("option_a", "").strip(),
+                    item.get("option_b", "").strip(),
+                    item.get("option_c", "").strip(),
+                    item.get("option_d", "").strip(),
+                    item.get("correct_answer", "A").strip().upper()[:1],
+                    item.get("explanation", "").strip()
+                ))
+                if cur.rowcount > 0:
+                    added += 1
+            conn.commit()
+            conn.close()
+            return {"success": True, "message": f"Đã tự động thêm {added} câu hỏi mới vào ngân hàng!"}
+    except Exception as e:
+        return {"success": False, "message": f"Lỗi gọi AI: {str(e)}"}

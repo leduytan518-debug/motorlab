@@ -1,10 +1,64 @@
-{% extends 'base.html' %}
-{% block title %}Kho linh kiện | MOTORLAB{% endblock %}
+{% extends "base.html" %}
+{% block title %}Flashcards Ghi nhớ nhanh - {{ site_name }}{% endblock %}
+
 {% block content %}
-<section class="page-hero"><div class="container"><span class="eyebrow">PARTS CATALOG</span><h1>Kho linh kiện</h1><p>Tra cứu chức năng, nhóm phương tiện tương thích và thông tin giá.</p></div></section>
-<section class="container section-block content-section">
-  <form class="filter-bar" method="get"><input type="search" name="q" value="{{ q }}" placeholder="Tìm tên linh kiện hoặc công dụng..."><select name="type"><option value="">Tất cả phương tiện</option><option value="oto" {% if selected_type == 'oto' %}selected{% endif %}>Ô tô</option><option value="xemay" {% if selected_type == 'xemay' %}selected{% endif %}>Xe máy</option></select><button class="button-primary" type="submit">Tìm linh kiện</button></form>
-  <div class="parts-grid">{% for part in parts %}<article class="part-card"><div class="part-icon">⚙</div><span class="type-pill">{{ 'Ô TÔ' if part.vehicle_type == 'oto' else 'XE MÁY' }}</span><h2>{{ part.name }}</h2><p>{{ part.function }}</p><div class="part-compat"><small>TƯƠNG THÍCH</small><strong>{{ part.compatible }}</strong></div><div class="part-price"><small>GIÁ THAM KHẢO</small><strong>{% if part.price_min and part.price_max and part.price_max > 0 %}{{ part.price_min|vnd }} – {{ part.price_max|vnd }}{% else %}Chưa cập nhật{% endif %}</strong><span>{{ part.price_note or 'Cần xác minh theo mã phụ tùng.' }}</span></div></article>{% else %}<div class="empty-state">Không tìm thấy linh kiện phù hợp.</div>{% endfor %}</div>
-  <p class="data-note">Không mua phụ tùng chỉ dựa vào tên gọi. Hãy đối chiếu mã phụ tùng, số khung/số máy, phiên bản và khuyến nghị của nhà sản xuất.</p>
+<section class="page-head center-head">
+  <div class="container">
+    <span class="eyebrow">ACTIVE RECALL • FLASHCARDS</span>
+    <h1>Thẻ ghi nhớ (Flashcards)</h1>
+    <p class="lead">Bấm trực tiếp vào từng thẻ để lật xem định nghĩa tóm gọn, mối liên hệ và từ khóa giúp nhớ nhanh kiến thức.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <form class="filter-bar" method="get" action="{{ url_for('parts') }}">
+      <input type="text" name="q" value="{{ q }}" placeholder="Tìm khái niệm trên Flashcard (VD: vật chất, thực tiễn, độ, cơ sở hạ tầng...)">
+      <select name="chapter">
+        <option value="">Tất cả các chương</option>
+        <option value="Chương 1" {% if chapter == 'Chương 1' %}selected{% endif %}>Chương 1: Khái luận Triết học</option>
+        <option value="Chương 2" {% if chapter == 'Chương 2' %}selected{% endif %}>Chương 2: Duy vật biện chứng</option>
+        <option value="Chương 3" {% if chapter == 'Chương 3' %}selected{% endif %}>Chương 3: Duy vật lịch sử</option>
+      </select>
+      <button type="submit" class="btn">Lọc thẻ</button>
+    </form>
+
+    <div class="grid" style="margin-top: 24px;">
+      {% for c in concepts %}
+      <div class="flashcard" onclick="this.classList.toggle('flipped')">
+        <div class="flashcard-inner">
+          <!-- MẶT TRƯỚC: CÂU HỎI / THUẬT NGỮ -->
+          <div class="flashcard-front card">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+              <span class="badge">{{ c.chapter }}</span>
+              <small class="muted">🔄 Bấm để lật thẻ</small>
+            </div>
+            <div style="margin: auto 0; text-align: center; padding: 24px 0;">
+              <div style="font-size: 36px; margin-bottom: 10px;">🗂️</div>
+              <h3 style="font-size: 22px; margin: 0;">{{ c.name }}</h3>
+              <p class="muted" style="margin-top: 8px; font-size: 13px;">Khái niệm này có bản chất và từ khóa cốt lõi là gì?</p>
+            </div>
+            <div style="width: 100%; text-align: center; border-top: 1px dashed var(--line); padding-top: 10px;">
+              <small style="color: var(--teal); font-weight: 700;">Thuộc: {{ c.relation }}</small>
+            </div>
+          </div>
+
+          <!-- MẶT SAU: ĐÁP ÁN TÓM GỌN & MẸO NHỚ -->
+          <div class="flashcard-back card">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+              <span class="badge">ĐỊNH NGHĨA CỐT LÕI</span>
+              <small class="muted">🔄 Bấm để quay lại</small>
+            </div>
+            <p style="margin: 14px 0; font-size: 14px; font-weight: 500;">{{ c.definition }}</p>
+            <div style="margin-top: auto; width: 100%; background: var(--teal-soft); padding: 12px; border-radius: 10px;">
+              <strong style="color: var(--teal); display: block; font-size: 13px;">🔑 {{ c.exam_tip }}</strong>
+              <small style="color: var(--ink); font-size: 12px;">💡 {{ c.note }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </section>
 {% endblock %}

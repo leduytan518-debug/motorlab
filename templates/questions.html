@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }} | STUDYLAB{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">{{ 'ĐỀ THI TỔNG HỢP' if quiz_page else 'ÔN TẬP THEO CHƯƠNG' }}</span>
+    <h1>{{ page_title }}</h1>
+    <p>{{ page_description }}</p>
+  </div>
+</section>
+
+<section class="container content-section question-section">
+  <div class="quiz-summary" aria-live="polite">
+    <strong>{{ questions|length }} câu hỏi</strong>
+    <span class="quiz-progress">Đã trả lời 0/{{ questions|length }} · Điểm 0</span>
+  </div>
+  <div class="question-list">
+    {% for item in questions %}
+    <article class="question-card" data-correct-answer="{{ item.correct_answer }}">
+      <div class="question-meta">
+        <span>Câu {{ loop.index }}</span>
+        <span>Triết học Mác - Lênin · Chương {{ item.chapter }}</span>
+      </div>
+      <h2>{{ item.question }}</h2>
+      <div class="answer-list">
+        {% for letter in ('A', 'B', 'C', 'D') %}
+        {% set option_text = item['option_' ~ letter|lower] %}
+        <button class="answer-option" type="button" data-option="{{ letter }}" aria-pressed="false">
+          <span class="answer-letter">{{ letter }}</span><span>{{ option_text }}</span>
+        </button>
+        {% endfor %}
+      </div>
+      <p class="answer-feedback" aria-live="polite" hidden></p>
+      <div class="answer-explanation" hidden>
+        <strong>Giải thích</strong>
+        <p>{{ item.explanation }}</p>
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-state">Chưa có câu hỏi cho nội dung này.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

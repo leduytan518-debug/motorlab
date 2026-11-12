@@ -1,161 +1,125 @@
-"""Flask web app: technical library for cars and motorcycles."""
 import os
-
-from flask import Flask, abort, render_template, request
-from database import get_connection, init_db
+from flask import Flask, jsonify, render_template, request
+from database import generate_questions_with_ai, get_connection, init_db
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-change-me")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "studylab-secret-key")
+SITE_NAME = "STUDYLAB"
 
-
-def fetch_all(query, params=()):
-    with get_connection() as conn:
-        return conn.execute(query, params).fetchall()
-
-
-def fetch_one(query, params=()):
-    with get_connection() as conn:
-        return conn.execute(query, params).fetchone()
-
-
-@app.template_filter("vnd")
-def format_vnd(value):
-    if value is None or int(value) <= 0:
-        return "Chưa cập nhật"
-    return f"{int(value):,}".replace(",", ".") + " đ"
-
+init_db()
 
 @app.context_processor
-def inject_site_labels():
-    return {"site_name": "MOTORLAB | Thư viện kỹ thuật phương tiện"}
-
+def inject_globals():
+    return {"site_name": SITE_NAME}
 
 @app.route("/")
 def index():
-    counts = {
-        "oto": fetch_one("SELECT COUNT(*) AS n FROM vehicles WHERE vehicle_type='oto'")["n"],
-        "xemay": fetch_one("SELECT COUNT(*) AS n FROM vehicles WHERE vehicle_type='xemay'")["n"],
-        "faults": fetch_one("SELECT COUNT(*) AS n FROM faults")["n"],
-        "parts": fetch_one("SELECT COUNT(*) AS n FROM parts")["n"],
+    conn = get_connection()
+    stats = {
+        "topics": conn.execute("SELECT COUNT(*) FROM topics").fetchone()[0],
+        "questions": conn.execute("SELECT COUNT(*) FROM questions").fetchone()[0],
+        "concepts": conn.execute("SELECT COUNT(*) FROM concepts").fetchone()[0],
+        "methods": conn.execute("SELECT COUNT(*) FROM methods").fetchone()[0],
     }
-    latest_vehicles = fetch_all("SELECT * FROM vehicles ORDER BY id DESC LIMIT 4")
-    latest_faults = fetch_all("SELECT * FROM faults ORDER BY id DESC LIMIT 3")
-    return render_template("index.html", counts=counts, vehicles=latest_vehicles, faults=latest_faults)
-
+    topics = conn.execute("SELECT * FROM topics LIMIT 3").fetchall()
+    conn.close()
+    return render_template("index.html", stats=stats, topics=topics)
 
 @app.route("/vehicles")
 def vehicles():
     q = request.args.get("q", "").strip()
-    vehicle_type = request.args.get("type", "").strip()
-    sql = "SELECT * FROM vehicles WHERE 1=1"
+    chapter = request.args.get("chapter", "").strip()
+    conn = get_connection()
+    sql = "SELECT * FROM topics WHERE 1=1"
     params = []
-    if vehicle_type in ("oto", "xemay"):
-        sql += " AND vehicle_type = ?"
-        params.append(vehicle_type)
+    if chapter:
+        sql += " AND category = ?"
+        params.append(chapter)
     if q:
-        like = f"%{q}%"
-        sql += " AND (brand LIKE ? OR model LIKE ? OR engine LIKE ? OR fuel_system LIKE ?)"
-        params.extend([like, like, like, like])
-    sql += " ORDER BY vehicle_type, brand, model"
-    rows = fetch_all(sql, params)
-    return render_template("vehicles.html", vehicles=rows, q=q, selected_type=vehicle_type)
-
-
-@app.route("/vehicles/<int:vehicle_id>")
-def vehicle_detail(vehicle_id):
-    vehicle = fetch_one("SELECT * FROM vehicles WHERE id = ?", (vehicle_id,))
-    if vehicle is None:
-        abort(404)
-    related_faults = fetch_all(
-        "SELECT * FROM faults WHERE vehicle_type = ? ORDER BY id LIMIT 4",
-        (vehicle["vehicle_type"],),
-    )
-    related_parts = fetch_all(
-        "SELECT * FROM parts WHERE vehicle_type = ? ORDER BY id LIMIT 4",
-        (vehicle["vehicle_type"],),
-    )
-    return render_template(
-        "vehicle_detail.html", vehicle=vehicle,
-        faults=related_faults, parts=related_parts,
-    )
-
+        sql += " AND (title LIKE ? OR summary LIKE ? OR key_points LIKE ?)"
+        params.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
+    items = conn.execute(sql, params).fetchall()
+    conn.close()
+    return render_template("vehicles.html", items=items, q=q, chapter=chapter)
 
 @app.route("/faults")
 def faults():
     q = request.args.get("q", "").strip()
-    vehicle_type = request.args.get("type", "").strip()
-    sql = "SELECT * FROM faults WHERE 1=1"
+    chapter = request.args.get("chapter", "").strip()
+    conn = get_connection()
+    sql = "SELECT * FROM questions WHERE 1=1"
     params = []
-    if vehicle_type in ("oto", "xemay"):
-        sql += " AND vehicle_type = ?"
-        params.append(vehicle_type)
+    if chapter:
+        sql += " AND chapter = ?"
+        params.append(chapter)
     if q:
-        like = f"%{q}%"
-        sql += " AND (code LIKE ? OR symptom LIKE ? OR causes LIKE ? OR model LIKE ?)"
-        params.extend([like, like, like, like])
-    sql += " ORDER BY CASE severity WHEN 'Cao' THEN 0 WHEN 'Trung bình' THEN 1 ELSE 2 END, id"
-    rows = fetch_all(sql, params)
-    return render_template("faults.html", faults=rows, q=q, selected_type=vehicle_type)
-
+        sql += " AND (question LIKE ? OR explanation LIKE ?)"
+        params.extend([f"%{q}%", f"%{q}%"])
+    sql += " ORDER BY id DESC"
+    questions = conn.execute(sql, params).fetchall()
+    conn.close()
+    return render_template(
+        "faults.html",
+        questions=questions,
+        q=q,
+        chapter=chapter,
+        has_env_key=bool(os.environ.get("GEMINI_API_KEY"))
+    )
 
 @app.route("/parts")
 def parts():
     q = request.args.get("q", "").strip()
-    vehicle_type = request.args.get("type", "").strip()
-    sql = "SELECT * FROM parts WHERE 1=1"
+    chapter = request.args.get("chapter", "").strip()
+    conn = get_connection()
+    sql = "SELECT * FROM concepts WHERE 1=1"
     params = []
-    if vehicle_type in ("oto", "xemay"):
-        sql += " AND vehicle_type = ?"
-        params.append(vehicle_type)
+    if chapter:
+        sql += " AND chapter = ?"
+        params.append(chapter)
     if q:
-        like = f"%{q}%"
-        sql += " AND (name LIKE ? OR compatible LIKE ? OR function LIKE ?)"
-        params.extend([like, like, like])
-    sql += " ORDER BY vehicle_type, name"
-    rows = fetch_all(sql, params)
-    return render_template("parts.html", parts=rows, q=q, selected_type=vehicle_type)
-
+        sql += " AND (name LIKE ? OR definition LIKE ? OR exam_tip LIKE ?)"
+        params.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
+    concepts = conn.execute(sql, params).fetchall()
+    conn.close()
+    return render_template("parts.html", concepts=concepts, q=q, chapter=chapter)
 
 @app.route("/tools")
 def tools():
     q = request.args.get("q", "").strip()
-    if q:
-        like = f"%{q}%"
-        rows = fetch_all(
-            "SELECT * FROM tools WHERE name LIKE ? OR category LIKE ? OR usage LIKE ? ORDER BY category, name",
-            (like, like, like),
-        )
-    else:
-        rows = fetch_all("SELECT * FROM tools ORDER BY category, name")
-    return render_template("tools.html", tools=rows, q=q)
-
-
-@app.route("/prices")
-def prices():
-    vehicle_type = request.args.get("type", "").strip()
-    sql = "SELECT * FROM repair_prices WHERE 1=1"
+    conn = get_connection()
+    sql = "SELECT * FROM methods WHERE 1=1"
     params = []
-    if vehicle_type in ("oto", "xemay"):
-        sql += " AND vehicle_type = ?"
-        params.append(vehicle_type)
-    sql += " ORDER BY vehicle_type, job"
-    rows = fetch_all(sql, params)
-    return render_template("prices.html", prices=rows, selected_type=vehicle_type)
-
+    if q:
+        sql += " AND (name LIKE ? OR usage LIKE ? OR how_to_apply LIKE ?)"
+        params.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
+    methods = conn.execute(sql, params).fetchall()
+    conn.close()
+    return render_template("tools.html", methods=methods, q=q)
 
 @app.route("/efi")
 def efi():
     return render_template("efi.html")
 
+@app.route("/prices")
+def prices():
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM exam_structure").fetchall()
+    conn.close()
+    return render_template("prices.html", rows=rows)
+
+@app.route("/api/generate", methods=["POST"])
+def api_generate():
+    data = request.get_json(silent=True) or {}
+    res = generate_questions_with_ai(
+        chapter=data.get("chapter", "Chương 2"),
+        count=int(data.get("count", 5)),
+        custom_api_key=data.get("api_key", "")
+    )
+    return jsonify(res)
 
 @app.errorhandler(404)
-def not_found(_error):
-    return render_template("404.html"), 404
-
-
-init_db()
-
+def not_found(_e):
+    return render_template("index.html", stats={"topics":6,"questions":6,"concepts":6,"methods":6}, topics=[]), 404
 
 if __name__ == "__main__":
-    # Chỉ dùng debug khi phát triển trên máy cá nhân.
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(debug=True)

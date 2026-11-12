@@ -1,106 +1,122 @@
 {% extends "base.html" %}
-{% block title %}Chẩn đoán & Tra cứu lỗi thông minh - {{ site_name }}{% endblock %}
+{% block title %}Ngân hàng trắc nghiệm - {{ site_name }}{% endblock %}
 
 {% block content %}
-<section class="page-head">
+<section class="page-head center-head">
   <div class="container">
-    <span class="eyebrow">SMART DIAGNOSTICS • CHẨN ĐOÁN BỆNH XE</span>
-    <h1>Hệ thống chẩn đoán lỗi theo triệu chứng</h1>
-    <p class="lead">Nhập hiện tượng hư hỏng, chọn nhanh triệu chứng thực tế hoặc mã lỗi OBD/FI để khoanh vùng nguyên nhân và quy trình kiểm tra.</p>
-
-    <!-- KHUNG TÌM KIẾM & LỌC LOẠI XE -->
-    <div class="diag-toolbar">
-      <div class="diag-search-box">
-        <span class="diag-icon">🔍</span>
-        <input type="text" id="diag-input" placeholder="Nhập triệu chứng (VD: hụt ga, khó nổ, rung đầu, P0171, hao xăng...)" autocomplete="off">
-        <button type="button" id="diag-clear" class="diag-clear-btn" style="display: none;">✕</button>
-      </div>
-
-      <div class="diag-type-tabs">
-        <button type="button" class="type-tab active" data-vehicle="all">Tất cả xe</button>
-        <button type="button" class="type-tab" data-vehicle="Ô tô">🚗 Ô tô</button>
-        <button type="button" class="type-tab" data-vehicle="Xe máy">🛵 Xe máy</button>
-      </div>
-    </div>
-
-    <!-- BỘ CHỌN NHANH TRIỆU CHỨNG THỰC TẾ -->
-    <div class="symptom-quick-bar">
-      <span class="symptom-label">Triệu chứng phổ biến:</span>
-      <button type="button" class="symptom-chip active" data-symptom="">Tất cả</button>
-      <button type="button" class="symptom-chip" data-symptom="khó nổ">⚡ Đề khó nổ / Không nổ</button>
-      <button type="button" class="symptom-chip" data-symptom="hụt ga">💨 Hụt ga / Lì máy</button>
-      <button type="button" class="symptom-chip" data-symptom="hao xăng">⛽ Hao xăng bất thường</button>
-      <button type="button" class="symptom-chip" data-symptom="rung">📳 Rung giật / Rung đầu</button>
-      <button type="button" class="symptom-chip" data-symptom="nhiệt">🌡️ Quá nhiệt / Sôi nước</button>
-      <button type="button" class="symptom-chip" data-symptom="phanh">🛑 Kêu phanh / Mất phanh</button>
-    </div>
+    <span class="eyebrow">QUIZ BANK • AUTO GENERATOR</span>
+    <h1>Ngân hàng câu hỏi trắc nghiệm</h1>
+    <p class="lead">Chọn đáp án để chấm điểm trực tiếp, xem giải thích chi tiết và bấm nút AI để tự động bổ sung câu hỏi mới.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <div class="diag-status-bar">
-      <span id="diag-count">Đang hiển thị toàn bộ danh sách bệnh & mã lỗi</span>
+    <form class="filter-bar" method="get" action="{{ url_for('faults') }}">
+      <input type="text" name="q" value="{{ q }}" placeholder="Tìm nội dung câu hỏi (VD: vật chất, lượng chất, Lênin...)">
+      <select name="chapter">
+        <option value="">Tất cả các chương</option>
+        <option value="Chương 1" {% if chapter == 'Chương 1' %}selected{% endif %}>Chương 1</option>
+        <option value="Chương 2" {% if chapter == 'Chương 2' %}selected{% endif %}>Chương 2</option>
+        <option value="Chương 3" {% if chapter == 'Chương 3' %}selected{% endif %}>Chương 3</option>
+      </select>
+      <button type="submit" class="btn">Tìm câu hỏi</button>
+    </form>
+
+    <!-- THANH TỰ ĐỘNG CẬP NHẬT CÂU HỎI BẰNG AI -->
+    <div class="card" style="margin-top: 16px; padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; border: 1px dashed var(--teal);">
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+        <strong>🤖 Cập nhật ngân hàng đề tự động:</strong>
+        <select id="ai-chapter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line);">
+          <option value="Chương 1">Chương 1: Khái luận Triết học</option>
+          <option value="Chương 2" selected>Chương 2: Duy vật biện chứng</option>
+          <option value="Chương 3">Chương 3: Duy vật lịch sử</option>
+        </select>
+        {% if not has_env_key %}
+        <input type="password" id="ai-key" placeholder="Dán GEMINI_API_KEY vào đây..." style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); min-width: 210px;">
+        {% endif %}
+        <button type="button" id="btn-ai-gen" class="btn" style="padding: 9px 16px;">✨ Tự động thêm 5 câu mới</button>
+      </div>
+      <span id="ai-status" style="font-weight: 700; font-size: 13px;">🎯 Điểm: <span id="score-correct" style="color: var(--teal);">0</span> / {{ questions|length }}</span>
     </div>
 
-    <!-- DANH SÁCH KẾT QUẢ CHẨN ĐOÁN -->
-    <div class="grid diag-grid" id="fault-list">
-      {% for f in faults %}
-      <article class="card diag-card" 
-               data-vehicle="{{ f.vehicle_type }}" 
-               data-search="{{ f.title|lower }} {{ f.symptoms|lower }} {{ f.causes|lower }} {{ f.fixes|lower }} {{ f.system|lower }}">
-        <div class="diag-card-top">
-          <span class="badge">{{ f.vehicle_type }}</span>
-          <span class="chip">{{ f.system }}</span>
-          {% if f.severity %}
-          <span class="severity-tag sev-{{ f.severity|lower }}">Mức độ: {{ f.severity }}</span>
-          {% endif %}
+    <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 24px;">
+      {% for item in questions %}
+      <article class="card quiz-card" data-correct="{{ item.correct_answer }}">
+        <span class="badge">{{ item.chapter }} • Câu {{ loop.index }}</span>
+        <h3 style="margin: 12px 0 16px;">{{ item.question }}</h3>
+
+        <div class="quiz-options">
+          <button type="button" class="quiz-opt" data-choice="A"><strong>A.</strong> {{ item.option_a }}</button>
+          <button type="button" class="quiz-opt" data-choice="B"><strong>B.</strong> {{ item.option_b }}</button>
+          <button type="button" class="quiz-opt" data-choice="C"><strong>C.</strong> {{ item.option_c }}</button>
+          <button type="button" class="quiz-opt" data-choice="D"><strong>D.</strong> {{ item.option_d }}</button>
         </div>
 
-        <h3 class="diag-title">{{ f.title }}</h3>
-
-        <div class="diag-body">
-          <div class="diag-block symptom-box">
-            <strong>⚠️ Triệu chứng nhận biết:</strong>
-            <p>{{ f.symptoms }}</p>
-          </div>
-
-          <div class="diag-block cause-box">
-            <strong>🔍 Nguyên nhân khả nghi:</strong>
-            <p>{{ f.causes }}</p>
-          </div>
-
-          <div class="diag-block fix-box">
-            <strong>🔧 Hướng kiểm tra & Khắc phục:</strong>
-            <p>{{ f.fixes }}</p>
-          </div>
+        <div class="quiz-exp" style="display: none; margin-top: 14px; padding: 12px; border-radius: 10px; background: var(--teal-soft);">
+          <strong class="exp-title"></strong>
+          <p style="margin: 4px 0 0;">{{ item.explanation }}</p>
         </div>
       </article>
       {% endfor %}
     </div>
-
-    <!-- THÔNG BÁO KHI KHÔNG TÌM THẤY -->
-    <div id="diag-empty" class="card diag-empty-box" style="display: none;">
-      <h3>Không tìm thấy triệu chứng trùng khớp</h3>
-      <p>Thử nhập từ khóa ngắn gọn hơn (ví dụ: <em>"nổ", "ga", "xăng", "rung"</em>) hoặc bấm nút <strong>Tất cả</strong> để xem toàn bộ danh sách.</p>
-    </div>
   </div>
 </section>
 
-<!-- SCRIPT LỌC CHẨN ĐOÁN TỨC THÌ (LIVE FILTER) -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.getElementById("diag-input");
-  const clearBtn = document.getElementById("diag-clear");
-  const vehicleTabs = document.querySelectorAll(".type-tab");
-  const symptomChips = document.querySelectorAll(".symptom-chip");
-  const cards = document.querySelectorAll(".diag-card");
-  const countEl = document.getElementById("diag-count");
-  const emptyBox = document.getElementById("diag-empty");
+  let score = 0;
+  const scoreEl = document.getElementById("score-correct");
 
-  let currentVehicle = "all";
-  let currentSymptom = "";
+  document.querySelectorAll(".quiz-card").forEach(card => {
+    const right = card.getAttribute("data-correct");
+    const opts = card.querySelectorAll(".quiz-opt");
+    const exp = card.querySelector(".quiz-exp");
+    const expTitle = card.querySelector(".exp-title");
 
-  function filterFaults() {
-    const query = searchInput.value.trim().toLowerCase();
-    clearBtn.
+    opts.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (card.classList.contains("done")) return;
+        card.classList.add("done");
+        const pick = btn.getAttribute("data-choice");
+        opts.forEach(o => {
+          if (o.getAttribute("data-choice") === right) o.style.borderColor = "#10b981";
+          if (o === btn && pick !== right) o.style.borderColor = "#ef4444";
+          o.disabled = true;
+        });
+        if (pick === right) {
+          score++;
+          scoreEl.textContent = score;
+          expTitle.textContent = "✅ Chính xác! Giải thích:";
+        } else {
+          expTitle.textContent = `❌ Sai rồi (Đáp án đúng là ${right}). Giải thích:`;
+        }
+        exp.style.display = "block";
+      });
+    });
+  });
+
+  const genBtn = document.getElementById("btn-ai-gen");
+  if (genBtn) {
+    genBtn.addEventListener("click", async () => {
+      genBtn.disabled = true;
+      genBtn.textContent = "⏳ Đang tạo câu hỏi...";
+      const chapter = document.getElementById("ai-chapter").value;
+      const keyEl = document.getElementById("ai-key");
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({chapter, count: 5, api_key: keyEl ? keyEl.value : ""})
+      });
+      const data = await res.json();
+      alert(data.message);
+      if (data.success) window.location.reload();
+      else {
+        genBtn.disabled = false;
+        genBtn.textContent = "✨ Tự động thêm 5 câu mới";
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

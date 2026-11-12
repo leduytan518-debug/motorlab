@@ -1,18 +1,51 @@
-{% extends 'base.html' %}
-{% block title %}Danh mục phương tiện | MOTORLAB{% endblock %}
+{% extends "base.html" %}
+{% block title %}Tóm gọn nội dung chính - {{ site_name }}{% endblock %}
+
 {% block content %}
-<section class="page-hero"><div class="container"><span class="eyebrow">VEHICLE DATABASE</span><h1>Danh mục phương tiện</h1><p>Tra cứu hãng xe, dòng xe, đời xe và thông tin động cơ.</p></div></section>
-<section class="container section-block content-section">
-  <form class="filter-bar" method="get" action="{{ url_for('vehicles') }}">
-    <input type="search" name="q" value="{{ q }}" placeholder="Nhập hãng xe, dòng xe, dung tích...">
-    <select name="type" aria-label="Loại phương tiện"><option value="">Tất cả phương tiện</option><option value="oto" {% if selected_type == 'oto' %}selected{% endif %}>Ô tô</option><option value="xemay" {% if selected_type == 'xemay' %}selected{% endif %}>Xe máy</option></select>
-    <button class="button-primary" type="submit">Lọc dữ liệu</button>
-  </form>
-  <div class="result-line">Tìm thấy <strong>{{ vehicles|length }}</strong> phương tiện</div>
-  <div class="vehicle-grid listing-grid">
-    {% for vehicle in vehicles %}<a class="vehicle-card" href="{{ url_for('vehicle_detail', vehicle_id=vehicle.id) }}"><div class="vehicle-card-top"><span class="type-pill">{{ 'Ô TÔ' if vehicle.vehicle_type == 'oto' else 'XE MÁY' }}</span><span class="mini-arrow">↗</span></div><div class="vehicle-placeholder">{{ '🚘' if vehicle.vehicle_type == 'oto' else '🏍️' }}</div><div class="vehicle-card-body"><small>{{ vehicle.brand }}</small><h3>{{ vehicle.model }}</h3><p>{{ vehicle.year or 'Chưa rõ đời' }} · {{ vehicle.engine or 'Chưa có thông số' }}</p></div></a>
-    {% else %}<div class="empty-state">Không tìm thấy phương tiện phù hợp. Hãy thử từ khóa khác.</div>{% endfor %}
+<section class="page-head center-head">
+  <div class="container">
+    <span class="eyebrow">CHAPTER SUMMARIES • TÓM TẮT CỐT LÕI</span>
+    <h1>Tóm gọn nội dung chính ({{ chapter or 'Toàn bộ 3 Chương' }})</h1>
+    <p class="lead">Hệ thống hóa ngắn gọn những luận điểm quan trọng nhất trong Giáo trình để đọc lướt, nắm ý chính trước khi lật Flashcard và làm Trắc nghiệm.</p>
   </div>
-  <p class="data-note">Thông tin trong bản demo có thể chưa đầy đủ. Hãy xác minh phiên bản, đời xe và mã động cơ trước khi đặt mua phụ tùng hoặc sửa chữa.</p>
+</section>
+
+<section class="section">
+  <div class="container">
+    <form class="filter-bar" method="get" action="{{ url_for('vehicles') }}">
+      <input type="text" name="q" value="{{ q }}" placeholder="Tìm nội dung tóm tắt (VD: thế giới quan, vật chất, mâu thuẫn, nhà nước...)">
+      <select name="chapter">
+        <option value="">Tất cả 3 chương</option>
+        <option value="Chương 1" {% if chapter == 'Chương 1' %}selected{% endif %}>Chương 1: Khái luận Triết học</option>
+        <option value="Chương 2" {% if chapter == 'Chương 2' %}selected{% endif %}>Chương 2: Duy vật biện chứng</option>
+        <option value="Chương 3" {% if chapter == 'Chương 3' %}selected{% endif %}>Chương 3: Duy vật lịch sử</option>
+      </select>
+      <button type="submit" class="btn">Lọc nội dung</button>
+    </form>
+
+    <div class="grid" style="margin-top: 24px;">
+      {% for item in items %}
+      <article class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="badge">{{ item.category }}</span>
+            <small style="color: var(--teal); font-weight: 700;">{{ item.exam_weight }}</small>
+          </div>
+          <h3 style="margin: 6px 0; font-size: 19px;">{{ item.title }}</h3>
+          <small class="muted" style="display: block; margin-bottom: 10px;">{{ item.subtitle }}</small>
+          <p style="font-size: 14px; line-height: 1.65;">{{ item.summary }}</p>
+        </div>
+
+        <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line);">
+          <small class="muted" style="display: block; margin-bottom: 12px;"><strong>🔑 Trọng tâm cần nhớ:</strong> {{ item.key_points }}</small>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="{{ url_for('parts', chapter=item.category) }}" class="chip">🗂️ Ôn bằng Flashcard</a>
+            <a href="{{ url_for('faults', chapter=item.category) }}" class="chip">✅ Làm Trắc nghiệm {{ item.category }}</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
 </section>
 {% endblock %}

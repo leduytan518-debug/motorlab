@@ -1,11 +1,27 @@
-{% extends 'base.html' %}
-{% block title %}Bảng giá tham khảo | MOTORLAB{% endblock %}
+{% extends "base.html" %}
+{% block title %}Cấu trúc đề & Điểm số - {{ site_name }}{% endblock %}
+
 {% block content %}
-<section class="page-hero"><div class="container"><span class="eyebrow">REPAIR COST GUIDE</span><h1>Bảng giá sửa chữa</h1><p>Nơi tổng hợp chi phí công việc bảo dưỡng và sửa chữa theo từng nhóm xe.</p></div></section>
-<section class="container section-block content-section">
-  <form class="filter-bar" method="get"><select name="type"><option value="">Ô tô và xe máy</option><option value="oto" {% if selected_type == 'oto' %}selected{% endif %}>Ô tô</option><option value="xemay" {% if selected_type == 'xemay' %}selected{% endif %}>Xe máy</option></select><button class="button-primary" type="submit">Lọc bảng giá</button></form>
-  <div class="price-warning"><strong>Quan trọng:</strong> Bản khởi tạo chưa có báo giá gara được xác minh. Các mục đang hiển thị “Chưa cập nhật” để tránh đưa ra con số sai. Khi bổ sung giá, cần ghi rõ khu vực, ngày khảo sát, loại phụ tùng và tiền công.</div>
-  <div class="table-wrap"><table class="data-table"><thead><tr><th>Phương tiện</th><th>Hạng mục</th><th>Giá thấp</th><th>Giá cao</th><th>Ghi chú</th></tr></thead><tbody>{% for item in prices %}<tr><td><span class="type-pill">{{ 'Ô TÔ' if item.vehicle_type == 'oto' else 'XE MÁY' }}</span></td><td><strong>{{ item.job }}</strong></td><td>{{ item.price_min|vnd }}</td><td>{{ item.price_max|vnd }}</td><td>{{ item.note }}</td></tr>{% else %}<tr><td colspan="5">Chưa có dữ liệu giá.</td></tr>{% endfor %}</tbody></table></div>
-  <p class="data-note">Giá thực tế thay đổi theo địa phương, gara, đời xe, tình trạng hư hỏng và chất lượng phụ tùng. Không dùng bảng giá tham khảo thay cho báo giá của đơn vị sửa chữa.</p>
+<section class="page-head center-head">
+  <div class="container">
+    <span class="eyebrow">EXAM STRUCTURE</span>
+    <h1>Cấu trúc đề & Phân bổ điểm</h1>
+    <p class="lead">Tỷ trọng câu hỏi tham khảo trong đề thi kết thúc học phần môn Triết học Mác - Lênin (40 câu / 60 phút).</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+      {% for r in rows %}
+      <article class="card">
+        <span class="badge">{{ r.chapter }}</span>
+        <h3 style="margin: 10px 0;">{{ r.topic_name }}</h3>
+        <p style="color: var(--teal); font-weight: 800; font-size: 18px; margin: 8px 0;">{{ r.question_count }} ({{ r.score_weight }})</p>
+        <p class="muted">{{ r.note }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
 </section>
 {% endblock %}
